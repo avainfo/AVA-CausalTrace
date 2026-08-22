@@ -70,7 +70,7 @@ AVA CausalTrace is split into two repositories.
 ### Public repository
 
 ```text
-avainfo/ava-causaltrace
+avainfo/AVA-CausalTrace
 ├── agent
 ├── bpf
 ├── cli
@@ -87,7 +87,7 @@ This repository contains the open tracing and integration components:
 ### Private causal engine
 
 ```text
-avainfo/ava-causal-engine
+avainfo/AVA-CausalEngine
 ├── graph
 ├── inference
 ├── correlation
