@@ -1,0 +1,21 @@
+services:
+  ebpf:
+    build: .
+    container_name: ebpf-dev
+
+    privileged: true
+    pid: "host"
+
+    volumes:
+      - .:/workspace
+      - /sys:/sys
+      - /proc:/proc
+
+    working_dir: /workspace
+
+    stdin_open: true
+    tty: true
+
+    command: >
+      sh -c "bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h && exec /bin/bash"
+
