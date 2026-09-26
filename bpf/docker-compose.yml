@@ -19,7 +19,6 @@ services:
     command: >
       sh -c "
         bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h &&
-        clang -g -O2 -target bpf -D__TARGET_ARCH_x86 -I. -c causaltrace.bpf.c -o causaltrace.bpf.o &&
+        make &&
         exec /bin/bash
       "
-
