@@ -26,6 +26,8 @@ RUN apt-get update && apt-get install -y \
 		vim \
 		&& rm -rf /var/lib/apt/lists/*
 
+RUN rm -rf /sys/fs/bpf/causaltrace
+
 RUN git clone --recurse-submodules https://github.com/libbpf/bpftool.git
 
 RUN cd bpftool/src && make && make install

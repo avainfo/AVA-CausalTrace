@@ -1,5 +1,6 @@
-BPF_SRC = causaltrace.bpf.c
-BPF_OBJ = causaltrace.bpf.o
+BPF_NAME = causaltrace
+BPF_SRC = $(BPF_NAME).bpf.c
+BPF_OBJ = $(BPF_NAME).bpf.o
 
 all: $(BPF_OBJ)
 
@@ -13,6 +14,7 @@ $(BPF_OBJ): $(BPF_SRC) vmlinux.h
 		-I. \
 		-c $(BPF_SRC) \
 		-o $(BPF_OBJ)
+	bpftool prog load $(BPF_OBJ) /sys/fs/bpf/$(BPF_NAME) autoattach
 
 clean:
 	rm -f $(BPF_OBJ)

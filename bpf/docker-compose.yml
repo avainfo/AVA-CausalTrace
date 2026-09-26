@@ -19,6 +19,7 @@ services:
     command: >
       sh -c "
         bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h &&
+        rm -rf /sys/fs/bpf/causaltrace
         make &&
         exec /bin/bash
       "
