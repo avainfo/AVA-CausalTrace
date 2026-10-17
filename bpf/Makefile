@@ -6,7 +6,7 @@ PROG_OBJ = $(BPF_NAME)
 BPF_SRC = $(BPF_NAME).bpf.c
 BPF_OBJ = $(BPF_NAME).bpf.o
 
-all: $(PROG_OBJ)
+all: $(BPF_OBJ)
 
 $(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ)
 	cc -Wall -Wextra -Werror $(PROG_SRC) -o $(PROG_OBJ) \
