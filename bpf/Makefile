@@ -1,8 +1,17 @@
 BPF_NAME = causaltrace
+
+PROG_SRC = $(BPF_NAME).c
+PROG_OBJ = $(BPF_NAME)
+
 BPF_SRC = $(BPF_NAME).bpf.c
 BPF_OBJ = $(BPF_NAME).bpf.o
 
-all: $(BPF_OBJ)
+all: $(PROG_OBJ)
+
+$(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ)
+	cc -Wall -Wextra -Werror $(PROG_SRC) -o $(PROG_OBJ) \
+		&& ./$(PROG_OBJ) $(pkg-config --cflags --libs libbpf) \
+		&& rm -i -f $(PROG_OBJ)
 
 $(BPF_OBJ): $(BPF_SRC) vmlinux.h
 	clang -g -O2 \
