@@ -16,8 +16,7 @@ int callback(void* ctx, void* data, size_t size) {
 
 	struct event* e = data;
 
-	printf("Received PID: %d\n", e->pid);
-	printf("Received COMM: %s\n", e->comm);
+	printf("EXEC pid=%d comm=%s\n", e->pid, e->comm);
 
 	return 0;
 }
