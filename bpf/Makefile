@@ -26,13 +26,14 @@ $(BPF_OBJ): $(BPF_SRC) vmlinux.h
 vmlinux.h:
 	bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
 
+clean: unload
+	rm -f $(BPF_OBJ)
+	rm -f $(PROG_OBJ)
+
 load: $(BPF_OBJ)
 	sudo bpftool prog load $(BPF_OBJ) /sys/fs/bpf/$(BPF_NAME) autoattach
 
 unload:
 	sudo rm -f /sys/fs/bpf/$(BPF_NAME)
-
-clean:
-	rm -f $(BPF_OBJ)
 
 .PHONY: all load unload

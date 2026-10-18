@@ -4,19 +4,35 @@
 #include <stddef.h>
 #include <stdio.h>
 
+enum event_type {
+	EVENT_EXEC = 1,
+	EVENT_FORK = 2,
+};
+
 struct event {
+	__u32 type;
 	__u32 pid;
 	__u32 tid;
+	__u32 ppid;
 	char comm[16];
 };
 
 int callback(void* ctx, void* data, size_t size) {
 	(void)ctx;
-	(void)size;
+
+	if (size < sizeof(struct event))
+		return 0;
 
 	struct event* e = data;
 
-	printf("EXEC pid=%d comm=%s\n", e->pid, e->comm);
+	switch (e->type) {
+	case EVENT_EXEC:
+		printf("EXEC pid=%u comm=%s\n", e->pid, e->comm);
+		break;
+	case EVENT_FORK:
+		printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
+		break;
+	}
 
 	return 0;
 }

@@ -12,9 +12,29 @@
 #include "vmlinux.h"
 #include <bpf/bpf_helpers.h>
 
+struct sched_process_fork_ctx {
+	__u16 common_type;
+	__u8 common_flags;
+	__u8 common_preempt_count;
+	__s32 common_pid;
+
+	char parent_comm[16];
+	__s32 parent_pid;
+
+	char child_comm[16];
+	__s32 child_pid;
+};
+
+enum event_type {
+	EVENT_EXEC = 1,
+	EVENT_FORK = 2,
+};
+
 struct event {
+	__u32 type;
 	__u32 pid;
 	__u32 tid;
+	__u32 ppid;
 	char comm[16];
 };
 
@@ -37,6 +57,8 @@ int obs_procs() {
 
 	e->pid = pid_tgid >> 32;
 	e->tid = (__u32)pid_tgid;
+	e->type = EVENT_EXEC;
+	e->ppid = 0;
 
 	bpf_get_current_comm(&e->comm, sizeof(e->comm));
 
@@ -47,10 +69,21 @@ int obs_procs() {
 }
 
 SEC("tracepoint/sched/sched_process_fork")
-int obs_forks(struct trace_event_raw_sched_process_fork* ctx) {
-	bpf_printk("FORK parent=%d child=%d", ctx->parent_pid, ctx->child_pid);
-	__u64 pid_tgid;
+int obs_forks(struct sched_process_fork_ctx* ctx) {
+	struct event* e;
 
+	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
+	if (!e)
+		return 0;
+
+	e->type = EVENT_FORK;
+	e->pid = ctx->child_pid;
+	e->tid = ctx->child_pid;
+	e->ppid = ctx->parent_pid;
+
+	bpf_probe_read_kernel_str(e->comm, sizeof(e->comm), ctx->child_comm);
+
+	bpf_ringbuf_submit(e, 0);
 	return 0;
 }
 
