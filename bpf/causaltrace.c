@@ -79,8 +79,9 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	// bpf_link__destroy(link);
-	// bpf_object__close(obj);
+	ring_buffer__free(rb);
+	bpf_link__destroy(link);
+	bpf_object__close(obj);
 
 	printf("SUCCEEDED");
 	return 0;
