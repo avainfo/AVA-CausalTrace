@@ -50,21 +50,33 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	struct bpf_program* prog = bpf_object__find_program_by_name(obj, "obs_procs");
-	if (!prog) {
+	struct bpf_program* exec_prog = bpf_object__find_program_by_name(obj, "obs_procs");
+	struct bpf_program* fork_prog = bpf_object__find_program_by_name(obj, "obs_forks");
+	if (!exec_prog || !fork_prog) {
+		fprintf(stderr, "Cannot find BPF programs\n");
 		bpf_object__close(obj);
 		return 1;
 	}
 
-	struct bpf_link* link = bpf_program__attach(prog);
-	if (!link) {
+	struct bpf_link* exec_link = bpf_program__attach(exec_prog);
+	struct bpf_link* fork_link = bpf_program__attach(fork_prog);
+	if (!exec_link || !fork_link) {
+		fprintf(stderr, "Cannot attach BPF programs\n");
+
+		if (exec_link)
+			bpf_link__destroy(exec_link);
+
+		if (fork_link)
+			bpf_link__destroy(fork_link);
+
 		bpf_object__close(obj);
 		return 1;
 	}
 
 	struct ring_buffer* rb = ring_buffer__new(map_fd, callback, NULL, NULL);
 	if (!rb) {
-		bpf_link__destroy(link);
+		bpf_link__destroy(exec_link);
+		bpf_link__destroy(fork_link);
 		bpf_object__close(obj);
 		return 1;
 	}
@@ -79,7 +91,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	ring_buffer__free(rb);
-	bpf_link__destroy(link);
+	bpf_link__destroy(exec_link);
+	bpf_link__destroy(fork_link);
 	bpf_object__close(obj);
 
 	printf("SUCCEEDED");

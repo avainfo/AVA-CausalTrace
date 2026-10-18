@@ -46,4 +46,12 @@ int obs_procs() {
 	return 0;
 }
 
+SEC("tracepoint/sched/sched_process_fork")
+int obs_forks(struct trace_event_raw_sched_process_fork* ctx) {
+	bpf_printk("FORK parent=%d child=%d", ctx->parent_pid, ctx->child_pid);
+	__u64 pid_tgid;
+
+	return 0;
+}
+
 char LICENSE[] SEC("license") = "GPL";
