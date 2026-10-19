@@ -14,19 +14,6 @@
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 
-struct sched_process_fork_ctx {
-	__u16 common_type;
-	__u8 common_flags;
-	__u8 common_preempt_count;
-	__s32 common_pid;
-
-	char parent_comm[16];
-	__s32 parent_pid;
-
-	char child_comm[16];
-	__s32 child_pid;
-};
-
 enum event_type {
 	EVENT_EXEC = 1,
 	EVENT_FORK = 2,

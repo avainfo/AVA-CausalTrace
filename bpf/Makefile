@@ -11,9 +11,7 @@ LIBBPF_FLAGS = $(shell pkg-config --cflags --libs libbpf)
 all: $(BPF_OBJ)
 
 $(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ)
-	cc -Wall -Wextra -Werror $(PROG_SRC) -o $(PROG_OBJ) $(LIBBPF_FLAGS) \
-		&& ./$(PROG_OBJ) \
-		# && rm -i -f $(PROG_OBJ)
+	cc -Wall -Wextra -Werror $(PROG_SRC) -o $(PROG_OBJ) $(LIBBPF_FLAGS)
 
 $(BPF_OBJ): $(BPF_SRC) vmlinux.h
 	clang -g -O2 \
@@ -26,6 +24,9 @@ $(BPF_OBJ): $(BPF_SRC) vmlinux.h
 vmlinux.h:
 	bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
 
+run: $(PROG_OBJ)
+	sudo ./$(PROG_OBJ)
+
 clean: unload
 	rm -f $(BPF_OBJ)
 	rm -f $(PROG_OBJ)
@@ -36,4 +37,4 @@ load: $(BPF_OBJ)
 unload:
 	sudo rm -f /sys/fs/bpf/$(BPF_NAME)
 
-.PHONY: all load unload
+.PHONY: all run load unload
