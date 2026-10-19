@@ -17,13 +17,18 @@
 enum event_type {
 	EVENT_EXEC = 1,
 	EVENT_FORK = 2,
+	EVENT_THREAD = 3,
 };
 
 struct event {
 	__u32 type;
+
 	__u32 pid;
 	__u32 tid;
+
 	__u32 ppid;
+	__u32 ptid;
+
 	char comm[16];
 };
 
@@ -40,14 +45,13 @@ int BPF_PROG(obs_procs, struct task_struct* p, pid_t old_pid, struct linux_binpr
 	if (!e)
 		return 0;
 
-	e->type = EVENT_EXEC;
 	e->pid = BPF_CORE_READ(p, tgid);
 	e->tid = BPF_CORE_READ(p, pid);
 	e->ppid = BPF_CORE_READ(p, real_parent, tgid);
+	e->ptid = BPF_CORE_READ(p, real_parent, pid);
+	e->type = EVENT_EXEC;
 
 	bpf_core_read_str(e->comm, sizeof(e->comm), &p->comm);
-
-	bpf_printk("EXEC pid=%u old_tid=%d comm=%s", e->pid, old_pid, e->comm);
 
 	bpf_ringbuf_submit(e, 0);
 	return 0;
@@ -61,10 +65,11 @@ int BPF_PROG(obs_forks, struct task_struct* p, struct task_struct* c) {
 	if (!e)
 		return 0;
 
-	e->type = EVENT_FORK;
 	e->pid = BPF_CORE_READ(c, tgid);
 	e->tid = BPF_CORE_READ(c, pid);
 	e->ppid = BPF_CORE_READ(p, tgid);
+	e->ptid = BPF_CORE_READ(p, pid);
+	e->type = e->tid == e->pid ? EVENT_FORK : EVENT_THREAD;
 
 	bpf_core_read_str(e->comm, sizeof(e->comm), &c->comm);
 

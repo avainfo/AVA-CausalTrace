@@ -7,13 +7,18 @@
 enum event_type {
 	EVENT_EXEC = 1,
 	EVENT_FORK = 2,
+	EVENT_THREAD = 3,
 };
 
 struct event {
 	__u32 type;
+
 	__u32 pid;
 	__u32 tid;
+
 	__u32 ppid;
+	__u32 ptid;
+
 	char comm[16];
 };
 
@@ -31,6 +36,9 @@ int callback(void* ctx, void* data, size_t size) {
 		break;
 	case EVENT_FORK:
 		printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
+		break;
+	case EVENT_THREAD:
+		printf("THREAD tgid=%u tid=%u comm=%s\n", e->ppid, e->ptid, e->comm);
 		break;
 	}
 
