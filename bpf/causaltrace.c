@@ -1,26 +1,8 @@
 #include <bpf/libbpf.h>
-#include <bpf/libbpf_legacy.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 
-enum event_type {
-	EVENT_EXEC = 1,
-	EVENT_FORK = 2,
-	EVENT_THREAD = 3,
-};
-
-struct event {
-	__u32 type;
-
-	__u32 pid;
-	__u32 tid;
-
-	__u32 ppid;
-	__u32 ptid;
-
-	char comm[16];
-};
+#include "events.h"
 
 int callback(void* ctx, void* data, size_t size) {
 	(void)ctx;
@@ -105,10 +87,10 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	int loop = true;
+	int loop = 1;
 	while (loop) {
 		int err = ring_buffer__poll(rb, 200);
-		if (err < -1) {
+		if (err < 0) {
 			printf("Error polling ring buffer: %d\n", err);
 			break;
 		}

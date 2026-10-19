@@ -8,12 +8,12 @@ BPF_OBJ = $(BPF_NAME).bpf.o
 
 LIBBPF_FLAGS = $(shell pkg-config --cflags --libs libbpf)
 
-all: $(BPF_OBJ)
+all: $(PROG_OBJ)
 
-$(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ)
+$(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ) events.h
 	cc -Wall -Wextra -Werror $(PROG_SRC) -o $(PROG_OBJ) $(LIBBPF_FLAGS)
 
-$(BPF_OBJ): $(BPF_SRC) vmlinux.h
+$(BPF_OBJ): $(BPF_SRC) events.h vmlinux.h
 	clang -g -O2 \
 		-target bpf \
 		-D__TARGET_ARCH_x86 \

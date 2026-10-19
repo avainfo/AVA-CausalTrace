@@ -10,27 +10,12 @@
  */
 
 #include "vmlinux.h"
+
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 
-enum event_type {
-	EVENT_EXEC = 1,
-	EVENT_FORK = 2,
-	EVENT_THREAD = 3,
-};
-
-struct event {
-	__u32 type;
-
-	__u32 pid;
-	__u32 tid;
-
-	__u32 ppid;
-	__u32 ptid;
-
-	char comm[16];
-};
+#include "events.h"
 
 struct {
 	__uint(type, BPF_MAP_TYPE_RINGBUF);
