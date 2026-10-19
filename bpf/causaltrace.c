@@ -38,7 +38,7 @@ int callback(void* ctx, void* data, size_t size) {
 		printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
 		break;
 	case EVENT_THREAD:
-		printf("THREAD tgid=%u tid=%u comm=%s\n", e->ppid, e->ptid, e->comm);
+		printf("THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid, e->comm);
 		break;
 	}
 
