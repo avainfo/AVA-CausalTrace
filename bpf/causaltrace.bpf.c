@@ -10,7 +10,9 @@
  */
 
 #include "vmlinux.h"
+#include <bpf/bpf_core_read.h>
 #include <bpf/bpf_helpers.h>
+#include <bpf/bpf_tracing.h>
 
 struct sched_process_fork_ctx {
 	__u16 common_type;
@@ -43,8 +45,8 @@ struct {
 	__uint(max_entries, 256 * 1024);
 } events SEC(".maps");
 
-SEC("tracepoint/sched/sched_process_exec")
-int obs_procs() {
+SEC("tp_btf/sched_process_exec")
+int BPF_PROG(obs_procs, struct task_struct* p, pid_t* old_pid, struct linux_binprm* bprm) {
 	struct event* e;
 	__u64 pid_tgid;
 
@@ -55,12 +57,12 @@ int obs_procs() {
 
 	pid_tgid = bpf_get_current_pid_tgid();
 
-	e->pid = pid_tgid >> 32;
-	e->tid = (__u32)pid_tgid;
 	e->type = EVENT_EXEC;
+	e->pid = BPF_CORE_READ(p, tgid);
+	e->tid = BPF_CORE_READ(p, pid);
 	e->ppid = 0;
 
-	bpf_get_current_comm(&e->comm, sizeof(e->comm));
+	bpf_core_read_str(e->comm, sizeof(e->comm), &p->comm);
 
 	bpf_printk("pid[%u], tid[%u], com: %s", e->pid, e->tid, e->comm);
 
@@ -68,8 +70,8 @@ int obs_procs() {
 	return 0;
 }
 
-SEC("tracepoint/sched/sched_process_fork")
-int obs_forks(struct sched_process_fork_ctx* ctx) {
+SEC("tp_btf/sched_process_fork")
+int BPF_PROG(obs_forks, struct task_struct* p, struct task_struct* c) {
 	struct event* e;
 
 	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
@@ -77,11 +79,11 @@ int obs_forks(struct sched_process_fork_ctx* ctx) {
 		return 0;
 
 	e->type = EVENT_FORK;
-	e->pid = ctx->child_pid;
-	e->tid = ctx->child_pid;
-	e->ppid = ctx->parent_pid;
+	e->pid = BPF_CORE_READ(c, tgid);
+	e->tid = BPF_CORE_READ(c, pid);
+	e->ppid = BPF_CORE_READ(p, tgid);
 
-	bpf_probe_read_kernel_str(e->comm, sizeof(e->comm), ctx->child_comm);
+	bpf_core_read_str(e->comm, sizeof(e->comm), &c->comm);
 
 	bpf_ringbuf_submit(e, 0);
 	return 0;
