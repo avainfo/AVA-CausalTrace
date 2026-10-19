@@ -32,9 +32,9 @@ clean: unload
 	rm -f $(PROG_OBJ)
 
 load: $(BPF_OBJ)
-	sudo bpftool prog load $(BPF_OBJ) /sys/fs/bpf/$(BPF_NAME) autoattach
+	sudo bpftool prog loadall $(BPF_OBJ) /sys/fs/bpf/$(BPF_NAME) autoattach
 
 unload:
 	sudo rm -f /sys/fs/bpf/$(BPF_NAME)
 
-.PHONY: all run load unload
+.PHONY: all run clean load unload
