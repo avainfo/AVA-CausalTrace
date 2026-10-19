@@ -1,3 +1,14 @@
+/*
+ * Ava Info Conseils
+ *
+ * Author: Antonin Do Souto
+ * Contact: antonindosouto@gmail.com
+ *
+ * Copyright (c) 2026 Antonin Do Souto
+ *
+ * SPDX-License-Identifier: GPL-2.0-only
+ */
+
 #include <bpf/libbpf.h>
 #include <stddef.h>
 #include <stdio.h>
