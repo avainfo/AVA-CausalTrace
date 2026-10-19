@@ -46,25 +46,21 @@ struct {
 } events SEC(".maps");
 
 SEC("tp_btf/sched_process_exec")
-int BPF_PROG(obs_procs, struct task_struct* p, pid_t* old_pid, struct linux_binprm* bprm) {
+int BPF_PROG(obs_procs, struct task_struct* p, pid_t old_pid, struct linux_binprm* bprm) {
 	struct event* e;
-	__u64 pid_tgid;
 
 	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
-
 	if (!e)
 		return 0;
-
-	pid_tgid = bpf_get_current_pid_tgid();
 
 	e->type = EVENT_EXEC;
 	e->pid = BPF_CORE_READ(p, tgid);
 	e->tid = BPF_CORE_READ(p, pid);
-	e->ppid = 0;
+	e->ppid = BPF_CORE_READ(p, real_parent, tgid);
 
 	bpf_core_read_str(e->comm, sizeof(e->comm), &p->comm);
 
-	bpf_printk("pid[%u], tid[%u], com: %s", e->pid, e->tid, e->comm);
+	bpf_printk("EXEC pid=%u old_tid=%d comm=%s", e->pid, old_pid, e->comm);
 
 	bpf_ringbuf_submit(e, 0);
 	return 0;
