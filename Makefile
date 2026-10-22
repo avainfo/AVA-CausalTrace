@@ -15,7 +15,7 @@ all: $(PROG_OBJ)
 $(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ) $(INC)
 	cc -Wall -Wextra -Werror $(PROG_SRC) -o $(PROG_OBJ) $(LIBBPF_FLAGS)
 
-$(BPF_OBJ): $(BPF_SRC) $(INC) vmlinux.h
+$(BPF_OBJ): $(BPF_SRC) $(INC) ./include/vmlinux.h
 	mkdir -p bin
 	clang -g -O2 \
 		-target bpf \
@@ -24,8 +24,8 @@ $(BPF_OBJ): $(BPF_SRC) $(INC) vmlinux.h
 		-c $(BPF_SRC) \
 		-o $(BPF_OBJ)
 
-vmlinux.h:
-	bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
+./include/vmlinux.h:
+	bpftool btf dump file /sys/kernel/btf/vmlinux format c > ./include/vmlinux.h
 
 run: $(PROG_OBJ)
 	sudo ./$(PROG_OBJ)

@@ -9,7 +9,7 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include "vmlinux.h"
+#include "../include/vmlinux.h"
 
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_helpers.h>
