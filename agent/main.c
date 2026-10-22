@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
 	struct bpf_link* exec_link = bpf_program__attach(exec_prog);
 	struct bpf_link* fork_link = bpf_program__attach(fork_prog);
 	struct bpf_link* exit_link = bpf_program__attach(exit_prog);
-	if (!exec_link || !fork_link|| !exit_link) {
+	if (!exec_link || !fork_link || !exit_link) {
 		fprintf(stderr, "Cannot attach BPF programs\n");
 
 		if (exec_link)
