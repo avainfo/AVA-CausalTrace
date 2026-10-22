@@ -30,6 +30,9 @@ int callback(void* ctx, void* data, size_t size) {
 	case EVENT_FORK:
 		printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
 		break;
+	case EVENT_EXIT:
+		printf("EXIT pid=%u comm=%s\n", e->pid, e->comm);
+		break;
 	case EVENT_THREAD:
 		printf("THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid, e->comm);
 		break;
@@ -67,9 +70,10 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	struct bpf_program* exec_prog = bpf_object__find_program_by_name(obj, "obs_procs");
+	struct bpf_program* exec_prog = bpf_object__find_program_by_name(obj, "obs_execs");
 	struct bpf_program* fork_prog = bpf_object__find_program_by_name(obj, "obs_forks");
-	if (!exec_prog || !fork_prog) {
+	struct bpf_program* exit_prog = bpf_object__find_program_by_name(obj, "obs_exits");
+	if (!exec_prog || !fork_prog || !exit_prog) {
 		fprintf(stderr, "Cannot find BPF programs\n");
 		bpf_object__close(obj);
 		return 1;
@@ -77,7 +81,8 @@ int main(int argc, char* argv[]) {
 
 	struct bpf_link* exec_link = bpf_program__attach(exec_prog);
 	struct bpf_link* fork_link = bpf_program__attach(fork_prog);
-	if (!exec_link || !fork_link) {
+	struct bpf_link* exit_link = bpf_program__attach(exit_prog);
+	if (!exec_link || !fork_link|| !exit_link) {
 		fprintf(stderr, "Cannot attach BPF programs\n");
 
 		if (exec_link)
@@ -85,6 +90,9 @@ int main(int argc, char* argv[]) {
 
 		if (fork_link)
 			bpf_link__destroy(fork_link);
+
+		if (exit_link)
+			bpf_link__destroy(exit_link);
 
 		bpf_object__close(obj);
 		return 1;
@@ -94,6 +102,7 @@ int main(int argc, char* argv[]) {
 	if (!rb) {
 		bpf_link__destroy(exec_link);
 		bpf_link__destroy(fork_link);
+		bpf_link__destroy(exit_link);
 		bpf_object__close(obj);
 		return 1;
 	}
@@ -110,6 +119,7 @@ int main(int argc, char* argv[]) {
 	ring_buffer__free(rb);
 	bpf_link__destroy(exec_link);
 	bpf_link__destroy(fork_link);
+	bpf_link__destroy(exit_link);
 	bpf_object__close(obj);
 
 	printf("SUCCEEDED");

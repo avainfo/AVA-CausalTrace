@@ -19,7 +19,8 @@
 enum event_type {
 	EVENT_EXEC = 1,
 	EVENT_FORK = 2,
-	EVENT_THREAD = 3,
+	EVENT_EXIT = 3,
+	EVENT_THREAD = 4,
 };
 
 struct event {

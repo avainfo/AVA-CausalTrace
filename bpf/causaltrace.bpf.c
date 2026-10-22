@@ -23,7 +23,7 @@ struct {
 } events SEC(".maps");
 
 SEC("tp_btf/sched_process_exec")
-int BPF_PROG(obs_procs, struct task_struct* p, pid_t old_pid, struct linux_binprm* bprm) {
+int BPF_PROG(obs_execs, struct task_struct* p, pid_t old_pid, struct linux_binprm* bprm) {
 	struct event* e;
 
 	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
@@ -57,6 +57,26 @@ int BPF_PROG(obs_forks, struct task_struct* p, struct task_struct* c) {
 	e->type = e->tid == e->pid ? EVENT_FORK : EVENT_THREAD;
 
 	bpf_core_read_str(e->comm, sizeof(e->comm), &c->comm);
+
+	bpf_ringbuf_submit(e, 0);
+	return 0;
+}
+
+SEC("tp_btf/sched_process_exit")
+int BPF_PROG(obs_exits, struct task_struct* p, pid_t old_pid, struct linux_binprm* bprm) {
+	struct event* e;
+
+	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
+	if (!e)
+		return 0;
+
+	e->pid = BPF_CORE_READ(p, tgid);
+	e->tid = BPF_CORE_READ(p, pid);
+	e->ppid = BPF_CORE_READ(p, real_parent, tgid);
+	e->ptid = BPF_CORE_READ(p, real_parent, pid);
+	e->type = EVENT_EXIT;
+
+	bpf_core_read_str(e->comm, sizeof(e->comm), &p->comm);
 
 	bpf_ringbuf_submit(e, 0);
 	return 0;
