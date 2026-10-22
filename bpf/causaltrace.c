@@ -13,7 +13,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "../include/events.h"
+#include "events.h"
 
 int callback(void* ctx, void* data, size_t size) {
 	(void)ctx;

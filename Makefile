@@ -13,14 +13,14 @@ LIBBPF_FLAGS = $(shell pkg-config --cflags --libs libbpf)
 all: $(PROG_OBJ)
 
 $(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ) $(INC)
-	cc -Wall -Wextra -Werror $(PROG_SRC) -o $(PROG_OBJ) $(LIBBPF_FLAGS)
+	cc -Wall -Wextra -Werror -Iinclude $(PROG_SRC) -o $(PROG_OBJ) $(LIBBPF_FLAGS)
 
 $(BPF_OBJ): $(BPF_SRC) $(INC) ./include/vmlinux.h
 	mkdir -p bin
 	clang -g -O2 \
 		-target bpf \
 		-D__TARGET_ARCH_x86 \
-		-I. \
+		-Iinclude \
 		-c $(BPF_SRC) \
 		-o $(BPF_OBJ)
 
@@ -40,4 +40,7 @@ load: $(BPF_OBJ)
 unload:
 	sudo rm -f /sys/fs/bpf/$(BPF_NAME)
 
-.PHONY: all run clean load unload
+compdb:
+	bear -- $(MAKE) -B all
+
+.PHONY: all run clean load unload compdb
