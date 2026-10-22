@@ -1,21 +1,19 @@
 BPF_NAME = causaltrace
 
-PROG_SRC = bpf/$(BPF_NAME).c
+PROG_SRC = ./agent/main.c
 PROG_OBJ = $(BPF_NAME)
 
 BPF_SRC = bpf/$(BPF_NAME).bpf.c
 BPF_OBJ = bin/$(BPF_NAME).bpf.o
 
-INC = ./include/*.h
-
 LIBBPF_FLAGS = $(shell pkg-config --cflags --libs libbpf)
 
 all: $(PROG_OBJ)
 
-$(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ) $(INC)
+$(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ)
 	cc -Wall -Wextra -Werror -Iinclude $(PROG_SRC) -o $(PROG_OBJ) $(LIBBPF_FLAGS)
 
-$(BPF_OBJ): $(BPF_SRC) $(INC) ./include/vmlinux.h
+$(BPF_OBJ): $(BPF_SRC) ./include/vmlinux.h
 	mkdir -p bin
 	clang -g -O2 \
 		-target bpf \
