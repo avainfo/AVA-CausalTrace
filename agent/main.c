@@ -9,11 +9,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <asm-generic/errno-base.h>
 #include <bpf/libbpf.h>
+#include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 
+#include "agent.h"
 #include "events.h"
+
+static volatile sig_atomic_t running = 1;
+
+static void handle_signal(int sig) {
+	(void)sig;
+	running = 0;
+}
 
 int callback(void* ctx, void* data, size_t size) {
 	(void)ctx;
@@ -44,84 +55,108 @@ int callback(void* ctx, void* data, size_t size) {
 int main(int argc, char* argv[]) {
 	(void)argc;
 	(void)argv;
-	struct bpf_object* obj;
+
+	struct bpf_object* obj = NULL;
+
+	struct bpf_link* exec_link = NULL;
+	struct bpf_link* fork_link = NULL;
+	struct bpf_link* exit_link = NULL;
+
+	struct ring_buffer* rb = NULL;
+
+	struct Process* processes = NULL;
+
+	struct bpf_map* map;
+
+	struct bpf_program *exec_prog, *fork_prog, *exit_prog;
+
+	int status = EXIT_FAILURE;
+	int err;
+
+	signal(SIGINT, handle_signal);
+	signal(SIGTERM, handle_signal);
 
 	obj = bpf_object__open_file("bin/causaltrace.bpf.o", NULL);
 	if (!obj) {
-		bpf_object__close(obj);
-		return 1;
+		perror("bpf_object__open_file");
+		goto cleanup;
 	}
 
-	int obj_loaded = bpf_object__load(obj);
-	if (obj_loaded != 0) {
-		bpf_object__close(obj);
-		return 1;
+	err = bpf_object__load(obj);
+	if (err) {
+		fprintf(stderr, "BPF load: %s\n", strerror(-err));
+		goto cleanup;
 	}
 
-	struct bpf_map* map = bpf_object__find_map_by_name(obj, "events");
-	if (!map) {
-		bpf_object__close(obj);
-		return 1;
-	}
+	map = bpf_object__find_map_by_name(obj, "events");
+	if (!map)
+		goto cleanup;
 
 	int map_fd = bpf_map__fd(map);
-	if (map_fd < 0) {
-		bpf_object__close(obj);
-		return 1;
-	}
+	if (map_fd < 0)
+		goto cleanup;
 
-	struct bpf_program* exec_prog = bpf_object__find_program_by_name(obj, "obs_execs");
-	struct bpf_program* fork_prog = bpf_object__find_program_by_name(obj, "obs_forks");
-	struct bpf_program* exit_prog = bpf_object__find_program_by_name(obj, "obs_exits");
+	exec_prog = bpf_object__find_program_by_name(obj, "obs_execs");
+	fork_prog = bpf_object__find_program_by_name(obj, "obs_forks");
+	exit_prog = bpf_object__find_program_by_name(obj, "obs_exits");
 	if (!exec_prog || !fork_prog || !exit_prog) {
 		fprintf(stderr, "Cannot find BPF programs\n");
-		bpf_object__close(obj);
-		return 1;
+		goto cleanup;
 	}
 
-	struct bpf_link* exec_link = bpf_program__attach(exec_prog);
-	struct bpf_link* fork_link = bpf_program__attach(fork_prog);
-	struct bpf_link* exit_link = bpf_program__attach(exit_prog);
-	if (!exec_link || !fork_link || !exit_link) {
-		fprintf(stderr, "Cannot attach BPF programs\n");
-
-		if (exec_link)
-			bpf_link__destroy(exec_link);
-
-		if (fork_link)
-			bpf_link__destroy(fork_link);
-
-		if (exit_link)
-			bpf_link__destroy(exit_link);
-
-		bpf_object__close(obj);
-		return 1;
+	exec_link = bpf_program__attach(exec_prog);
+	if (!exec_link) {
+		perror("attach obs_execs");
+		goto cleanup;
 	}
 
-	struct ring_buffer* rb = ring_buffer__new(map_fd, callback, NULL, NULL);
+	fork_link = bpf_program__attach(fork_prog);
+	if (!fork_link) {
+		perror("attach obs_forks");
+		goto cleanup;
+	}
+
+	exit_link = bpf_program__attach(exit_prog);
+	if (!exit_link) {
+		perror("attach obs_exits");
+		goto cleanup;
+	}
+
+	processes = calloc(HISTORIC_SIZE, sizeof *processes);
+	if (!processes) {
+		perror("calloc");
+		goto cleanup;
+	}
+
+	rb = ring_buffer__new(map_fd, callback, processes, NULL);
 	if (!rb) {
-		bpf_link__destroy(exec_link);
-		bpf_link__destroy(fork_link);
-		bpf_link__destroy(exit_link);
-		bpf_object__close(obj);
-		return 1;
+		perror("ring_buffer__new");
+		goto cleanup;
 	}
 
-	int loop = 1;
-	while (loop) {
-		int err = ring_buffer__poll(rb, 200);
-		if (err < 0) {
-			printf("Error polling ring buffer: %d\n", err);
+	while (running) {
+		err = ring_buffer__poll(rb, 200);
+
+		if (err == -EINTR && !running)
 			break;
+
+		if (err < 0) {
+			fprintf(stderr, "Ring buffer poll: %d\n", err);
+			goto cleanup;
 		}
 	}
 
+	status = EXIT_SUCCESS;
+
+cleanup:
 	ring_buffer__free(rb);
-	bpf_link__destroy(exec_link);
-	bpf_link__destroy(fork_link);
+	free(processes);
+
 	bpf_link__destroy(exit_link);
+	bpf_link__destroy(fork_link);
+	bpf_link__destroy(exec_link);
+
 	bpf_object__close(obj);
 
-	printf("SUCCEEDED");
-	return 0;
+	return status;
 }
