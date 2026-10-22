@@ -13,7 +13,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "events.h"
+#include "../include/events.h"
 
 int callback(void* ctx, void* data, size_t size) {
 	(void)ctx;
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 	(void)argv;
 	struct bpf_object* obj;
 
-	obj = bpf_object__open_file("causaltrace.bpf.o", NULL);
+	obj = bpf_object__open_file("bin/causaltrace.bpf.o", NULL);
 	if (!obj) {
 		bpf_object__close(obj);
 		return 1;

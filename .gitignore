@@ -1,0 +1,4 @@
+bin/
+vmlinux.h
+causaltrace
+*.txt

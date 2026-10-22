@@ -1,19 +1,22 @@
 BPF_NAME = causaltrace
 
-PROG_SRC = $(BPF_NAME).c
+PROG_SRC = bpf/$(BPF_NAME).c
 PROG_OBJ = $(BPF_NAME)
 
-BPF_SRC = $(BPF_NAME).bpf.c
-BPF_OBJ = $(BPF_NAME).bpf.o
+BPF_SRC = bpf/$(BPF_NAME).bpf.c
+BPF_OBJ = bin/$(BPF_NAME).bpf.o
+
+INC = ./include/*.h
 
 LIBBPF_FLAGS = $(shell pkg-config --cflags --libs libbpf)
 
 all: $(PROG_OBJ)
 
-$(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ) events.h
+$(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ) $(INC)
 	cc -Wall -Wextra -Werror $(PROG_SRC) -o $(PROG_OBJ) $(LIBBPF_FLAGS)
 
-$(BPF_OBJ): $(BPF_SRC) events.h vmlinux.h
+$(BPF_OBJ): $(BPF_SRC) $(INC) vmlinux.h
+	mkdir -p bin
 	clang -g -O2 \
 		-target bpf \
 		-D__TARGET_ARCH_x86 \
