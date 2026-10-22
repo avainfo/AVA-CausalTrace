@@ -63,7 +63,7 @@ int BPF_PROG(obs_forks, struct task_struct* p, struct task_struct* c) {
 }
 
 SEC("tp_btf/sched_process_exit")
-int BPF_PROG(obs_exits, struct task_struct* p, pid_t old_pid, struct linux_binprm* bprm) {
+int BPF_PROG(obs_exits, struct task_struct* p) {
 	struct event* e;
 
 	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
