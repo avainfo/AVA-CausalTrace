@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
 
 	struct ring_buffer* rb = NULL;
 
-	struct Process* processes = NULL;
+	Process* processes = NULL;
 
 	struct bpf_map* map;
 

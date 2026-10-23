@@ -23,7 +23,7 @@ enum status_type {
 	STATUS_EXITED = 2,
 };
 
-struct Process {
+typedef struct Process {
 	__u32 pid;
 	__u32 tid;
 	__u32 ppid;
@@ -31,7 +31,7 @@ struct Process {
 
 	__u32 status;
 
-	struct Process *parent;
-} process;
+	struct Process* parent;
+} Process;
 
 #endif // AGENT_H
