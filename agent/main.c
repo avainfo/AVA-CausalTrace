@@ -12,13 +12,13 @@
 #include <asm-generic/errno-base.h>
 #include <bpf/libbpf.h>
 #include <errno.h>
-#include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "agent.h"
 #include "events.h"
+#include "signals.h"
 
 static const char* const program_names[] = {
     "obs_execs",
@@ -27,13 +27,6 @@ static const char* const program_names[] = {
 };
 
 enum { PROGRAM_COUNT = sizeof(program_names) / sizeof(program_names[0]) };
-
-static volatile sig_atomic_t running = 1;
-
-static void handle_signal(int sig) {
-	(void)sig;
-	running = 0;
-}
 
 int callback(void* ctx, void* data, size_t size) {
 	(void)ctx;
@@ -139,10 +132,10 @@ static int agent_init(Agent* agent) {
 }
 
 static int agent_run(Agent* agent) {
-	while (running) {
+	while (signals_running()) {
 		int err = ring_buffer__poll(agent->rb, 200);
 		if (err == -EINTR) {
-			if (!running)
+			if (!signals_running())
 				break;
 			continue;
 		}
@@ -159,16 +152,11 @@ static int agent_run(Agent* agent) {
 int main(void) {
 	Agent agent = {0};
 
-	struct sigaction sa = {.sa_handler = handle_signal};
-
-	sigemptyset(&sa.sa_mask);
-
-	if (sigaction(SIGINT, &sa, NULL) < 0 || sigaction(SIGTERM, &sa, NULL) < 0) {
-		perror("sigaction");
+	if (signals_init() < 0)
 		return EXIT_FAILURE;
-	}
 
 	int err = agent_init(&agent);
+
 	if (!err)
 		err = agent_run(&agent);
 

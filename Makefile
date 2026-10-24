@@ -1,6 +1,6 @@
 BPF_NAME = causaltrace
 
-PROG_SRC = ./agent/main.c
+PROG_SRC = $(wildcard agent/*.c)
 PROG_OBJ = $(BPF_NAME)
 
 BPF_SRC = bpf/$(BPF_NAME).bpf.c
