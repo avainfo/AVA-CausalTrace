@@ -1,36 +1,42 @@
 BPF_NAME = causaltrace
 
 PROG_SRC = $(wildcard agent/*.c)
-PROG_OBJ = $(BPF_NAME)
+PROG_OBJ = $(PROG_SRC:.c=.o)
+PROG_DEP = $(PROG_OBJ:.o=.d)
+PROG_BIN = $(BPF_NAME)
 
 BPF_SRC = bpf/$(BPF_NAME).bpf.c
 BPF_OBJ = bin/$(BPF_NAME).bpf.o
 
-LIBBPF_FLAGS = $(shell pkg-config --cflags --libs libbpf)
+CFLAGS = -Wall -Wextra -Werror -Iinclude -MMD -MP
+LIBBPF_CFLAGS = $(shell pkg-config --cflags libbpf)
+LIBBPF_LIBS = $(shell pkg-config --libs libbpf)
 
-all: $(PROG_OBJ)
+all: $(PROG_BIN) $(BPF_OBJ)
 
-$(PROG_OBJ): $(PROG_SRC) $(BPF_OBJ)
-	cc -Wall -Wextra -Werror -Iinclude $(PROG_SRC) -o $(PROG_OBJ) $(LIBBPF_FLAGS)
+$(PROG_BIN): $(PROG_OBJ)
+	$(CC) $(PROG_OBJ) -o $@ $(LIBBPF_LIBS)
 
-$(BPF_OBJ): $(BPF_SRC) ./include/vmlinux.h
+agent/%.o: agent/%.c
+	$(CC) $(CFLAGS) $(LIBBPF_CFLAGS) -c $< -o $@
+
+$(BPF_OBJ): $(BPF_SRC) include/vmlinux.h
 	mkdir -p bin
 	clang -g -O2 \
 		-target bpf \
 		-D__TARGET_ARCH_x86 \
 		-Iinclude \
-		-c $(BPF_SRC) \
-		-o $(BPF_OBJ)
+		-c $< \
+		-o $@
 
-./include/vmlinux.h:
-	bpftool btf dump file /sys/kernel/btf/vmlinux format c > ./include/vmlinux.h
+include/vmlinux.h:
+	bpftool btf dump file /sys/kernel/btf/vmlinux format c > $@
 
-run: $(PROG_OBJ)
-	sudo ./$(PROG_OBJ)
+run: all
+	sudo ./$(PROG_BIN)
 
 clean: unload
-	rm -f $(BPF_OBJ)
-	rm -f $(PROG_OBJ)
+	rm -f $(BPF_OBJ) $(PROG_OBJ) $(PROG_DEP) $(PROG_BIN)
 
 load: $(BPF_OBJ)
 	sudo bpftool prog loadall $(BPF_OBJ) /sys/fs/bpf/$(BPF_NAME) autoattach
@@ -40,5 +46,7 @@ unload:
 
 compdb:
 	bear -- $(MAKE) -B all
+
+-include $(PROG_DEP)
 
 .PHONY: all run clean load unload compdb

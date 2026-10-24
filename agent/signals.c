@@ -1,7 +1,6 @@
 #include <signal.h>
 
 #include <errno.h>
-#include <signal.h>
 #include <stdlib.h>
 
 #include "signals.h"
