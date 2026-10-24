@@ -18,6 +18,14 @@
 
 #define HISTORIC_SIZE 512
 
+static const char* const program_names[] = {
+    "obs_execs",
+    "obs_forks",
+    "obs_exits",
+};
+
+enum { PROGRAM_COUNT = sizeof(program_names) / sizeof(program_names[0]) };
+
 enum status_type {
 	STATUS_RUNNING = 1,
 	STATUS_EXITED = 2,
@@ -33,5 +41,17 @@ typedef struct Process {
 
 	struct Process* parent;
 } Process;
+
+typedef struct {
+	struct bpf_object* obj;
+	struct bpf_link* links[PROGRAM_COUNT];
+	struct ring_buffer* rb;
+	Process* processes;
+} Agent;
+
+void agent_destroy(Agent* agent);
+int agent_attach(Agent* agent);
+int agent_init(Agent* agent);
+int agent_run(Agent* agent);
 
 #endif // AGENT_H

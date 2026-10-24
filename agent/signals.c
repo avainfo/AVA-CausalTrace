@@ -1,9 +1,18 @@
+/*
+ * Ava Info Conseils
+ *
+ * Author: Antonin Do Souto
+ * Contact: antonindosouto@gmail.com
+ *
+ * Copyright (c) 2026 Antonin Do Souto
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <signal.h>
 
 #include <errno.h>
 #include <stdlib.h>
-
-#include "signals.h"
 
 static volatile sig_atomic_t running = 1;
 
