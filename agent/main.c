@@ -11,6 +11,7 @@
 
 #include <asm-generic/errno-base.h>
 #include <bpf/libbpf.h>
+#include <errno.h>
 #include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -18,6 +19,14 @@
 
 #include "agent.h"
 #include "events.h"
+
+static const char* const program_names[] = {
+    "obs_execs",
+    "obs_forks",
+    "obs_exits",
+};
+
+enum { PROGRAM_COUNT = sizeof(program_names) / sizeof(program_names[0]) };
 
 static volatile sig_atomic_t running = 1;
 
@@ -52,111 +61,118 @@ int callback(void* ctx, void* data, size_t size) {
 	return 0;
 }
 
-int main(int argc, char* argv[]) {
-	(void)argc;
-	(void)argv;
+typedef struct {
+	struct bpf_object* obj;
+	struct bpf_link* links[PROGRAM_COUNT];
+	struct ring_buffer* rb;
+	Process* processes;
+} Agent;
 
-	struct bpf_object* obj = NULL;
+static void agent_destroy(Agent* agent) {
+	for (size_t i = 0; i < PROGRAM_COUNT; i++)
+		bpf_link__destroy(agent->links[i]);
 
-	struct bpf_link* exec_link = NULL;
-	struct bpf_link* fork_link = NULL;
-	struct bpf_link* exit_link = NULL;
+	ring_buffer__free(agent->rb);
+	free(agent->processes);
+	bpf_object__close(agent->obj);
+}
 
-	struct ring_buffer* rb = NULL;
+static int agent_attach(Agent* agent) {
+	for (size_t i = 0; i < PROGRAM_COUNT; i++) {
+		const char* name = program_names[i];
 
-	Process* processes = NULL;
+		struct bpf_program* prog = bpf_object__find_program_by_name(agent->obj, name);
+		if (!prog) {
+			fprintf(stderr, "BPF program not found: %s\n", name);
+			return -ENOENT;
+		}
 
-	struct bpf_map* map;
-
-	struct bpf_program *exec_prog, *fork_prog, *exit_prog;
-
-	int status = EXIT_FAILURE;
-	int err;
-
-	signal(SIGINT, handle_signal);
-	signal(SIGTERM, handle_signal);
-
-	obj = bpf_object__open_file("bin/causaltrace.bpf.o", NULL);
-	if (!obj) {
-		perror("bpf_object__open_file");
-		goto cleanup;
-	}
-
-	err = bpf_object__load(obj);
-	if (err) {
-		fprintf(stderr, "BPF load: %s\n", strerror(-err));
-		goto cleanup;
-	}
-
-	map = bpf_object__find_map_by_name(obj, "events");
-	if (!map)
-		goto cleanup;
-
-	int map_fd = bpf_map__fd(map);
-	if (map_fd < 0)
-		goto cleanup;
-
-	exec_prog = bpf_object__find_program_by_name(obj, "obs_execs");
-	fork_prog = bpf_object__find_program_by_name(obj, "obs_forks");
-	exit_prog = bpf_object__find_program_by_name(obj, "obs_exits");
-	if (!exec_prog || !fork_prog || !exit_prog) {
-		fprintf(stderr, "Cannot find BPF programs\n");
-		goto cleanup;
-	}
-
-	exec_link = bpf_program__attach(exec_prog);
-	if (!exec_link) {
-		perror("attach obs_execs");
-		goto cleanup;
-	}
-
-	fork_link = bpf_program__attach(fork_prog);
-	if (!fork_link) {
-		perror("attach obs_forks");
-		goto cleanup;
-	}
-
-	exit_link = bpf_program__attach(exit_prog);
-	if (!exit_link) {
-		perror("attach obs_exits");
-		goto cleanup;
-	}
-
-	processes = calloc(HISTORIC_SIZE, sizeof *processes);
-	if (!processes) {
-		perror("calloc");
-		goto cleanup;
-	}
-
-	rb = ring_buffer__new(map_fd, callback, processes, NULL);
-	if (!rb) {
-		perror("ring_buffer__new");
-		goto cleanup;
-	}
-
-	while (running) {
-		err = ring_buffer__poll(rb, 200);
-
-		if (err == -EINTR && !running)
-			break;
-
-		if (err < 0) {
-			fprintf(stderr, "Ring buffer poll: %d\n", err);
-			goto cleanup;
+		agent->links[i] = bpf_program__attach(prog);
+		if (!agent->links[i]) {
+			int err = errno;
+			fprintf(stderr, "Cannot attach %s: %s\n", name, strerror(err));
+			return -err;
 		}
 	}
 
-	status = EXIT_SUCCESS;
+	return 0;
+}
 
-cleanup:
-	ring_buffer__free(rb);
-	free(processes);
+static int agent_init(Agent* agent) {
+	agent->obj = bpf_object__open_file("bin/causaltrace.bpf.o", NULL);
+	if (!agent->obj) {
+		perror("bpf_object__open_file");
+		return -1;
+	}
 
-	bpf_link__destroy(exit_link);
-	bpf_link__destroy(fork_link);
-	bpf_link__destroy(exec_link);
+	int err = bpf_object__load(agent->obj);
+	if (err) {
+		fprintf(stderr, "BPF load: %s\n", strerror(-err));
+		return err;
+	}
 
-	bpf_object__close(obj);
+	struct bpf_map* map = bpf_object__find_map_by_name(agent->obj, "events");
+	if (!map) {
+		fprintf(stderr, "BPF map not found: events\n");
+		return -ENOENT;
+	}
 
-	return status;
+	int map_fd = bpf_map__fd(map);
+	if (map_fd < 0) {
+		fprintf(stderr, "Map FD: %s\n", strerror(-map_fd));
+		return map_fd;
+	}
+
+	agent->processes = calloc(HISTORIC_SIZE, sizeof(*agent->processes));
+	if (!agent->processes) {
+		perror("calloc");
+		return -ENOMEM;
+	}
+
+	agent->rb = ring_buffer__new(map_fd, callback, agent->processes, NULL);
+	if (!agent->rb) {
+		perror("ring_buffer__new");
+		return -1;
+	}
+
+	return agent_attach(agent);
+}
+
+static int agent_run(Agent* agent) {
+	while (running) {
+		int err = ring_buffer__poll(agent->rb, 200);
+		if (err == -EINTR) {
+			if (!running)
+				break;
+			continue;
+		}
+
+		if (err < 0) {
+			fprintf(stderr, "Ring buffer poll: %s\n", strerror(-err));
+			return err;
+		}
+	}
+
+	return 0;
+}
+
+int main(void) {
+	Agent agent = {0};
+
+	struct sigaction sa = {.sa_handler = handle_signal};
+
+	sigemptyset(&sa.sa_mask);
+
+	if (sigaction(SIGINT, &sa, NULL) < 0 || sigaction(SIGTERM, &sa, NULL) < 0) {
+		perror("sigaction");
+		return EXIT_FAILURE;
+	}
+
+	int err = agent_init(&agent);
+	if (!err)
+		err = agent_run(&agent);
+
+	agent_destroy(&agent);
+
+	return err ? EXIT_FAILURE : EXIT_SUCCESS;
 }
