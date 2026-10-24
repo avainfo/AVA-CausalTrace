@@ -1,9 +1,10 @@
+
 BPF_NAME = causaltrace
 
 PROG_SRC = $(wildcard agent/*.c)
-PROG_OBJ = $(PROG_SRC:.c=.o)
+PROG_OBJ = $(patsubst agent/%.c,bin/agent/%.o,$(PROG_SRC))
 PROG_DEP = $(PROG_OBJ:.o=.d)
-PROG_BIN = $(BPF_NAME)
+PROG_BIN = bin/$(BPF_NAME)
 
 BPF_SRC = bpf/$(BPF_NAME).bpf.c
 BPF_OBJ = bin/$(BPF_NAME).bpf.o
@@ -17,11 +18,12 @@ all: $(PROG_BIN) $(BPF_OBJ)
 $(PROG_BIN): $(PROG_OBJ)
 	$(CC) $(PROG_OBJ) -o $@ $(LIBBPF_LIBS)
 
-agent/%.o: agent/%.c
+bin/agent/%.o: agent/%.c
+	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(LIBBPF_CFLAGS) -c $< -o $@
 
 $(BPF_OBJ): $(BPF_SRC) include/vmlinux.h
-	mkdir -p bin
+	mkdir -p $(dir $@)
 	clang -g -O2 \
 		-target bpf \
 		-D__TARGET_ARCH_x86 \
@@ -35,8 +37,8 @@ include/vmlinux.h:
 run: all
 	sudo ./$(PROG_BIN)
 
-clean: unload
-	rm -f $(BPF_OBJ) $(PROG_OBJ) $(PROG_DEP) $(PROG_BIN)
+clean:
+	rm -rf bin
 
 load: $(BPF_OBJ)
 	sudo bpftool prog loadall $(BPF_OBJ) /sys/fs/bpf/$(BPF_NAME) autoattach
