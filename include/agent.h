@@ -18,14 +18,6 @@
 
 #define HISTORIC_SIZE 512
 
-static const char* const program_names[] = {
-    "obs_execs",
-    "obs_forks",
-    "obs_exits",
-};
-
-enum { PROGRAM_COUNT = sizeof(program_names) / sizeof(program_names[0]) };
-
 enum status_type {
 	STATUS_RUNNING = 1,
 	STATUS_EXITED = 2,
@@ -41,6 +33,13 @@ typedef struct Process {
 
 	struct Process* parent;
 } Process;
+
+enum {
+	PROGRAM_EXEC,
+	PROGRAM_FORK,
+	PROGRAM_EXIT,
+	PROGRAM_COUNT,
+};
 
 typedef struct {
 	struct bpf_object* obj;

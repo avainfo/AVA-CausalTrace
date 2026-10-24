@@ -15,10 +15,17 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "agent.h"
 #include "events.h"
 #include "signals.h"
+
+static const char* const program_names[PROGRAM_COUNT] = {
+    [PROGRAM_EXEC] = "obs_execs",
+    [PROGRAM_FORK] = "obs_forks",
+    [PROGRAM_EXIT] = "obs_exits",
+};
 
 int callback(void* ctx, void* data, size_t size) {
 	(void)ctx;
