@@ -13,7 +13,7 @@
 #define AVA_EVENTS_H
 
 #ifndef __VMLINUX_H__
-#include <linux/types.h>
+#include "vmlinux.h"
 #endif
 
 enum event_type {
