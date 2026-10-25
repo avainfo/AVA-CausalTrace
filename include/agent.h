@@ -12,6 +12,7 @@
 #ifndef AGENT_H
 #define AGENT_H
 
+#include <stddef.h>
 #ifndef __VMLINUX_H__
 #include <linux/types.h>
 #endif
@@ -22,6 +23,12 @@ enum status_type {
 	STATUS_RUNNING = 1,
 	STATUS_EXITED = 2,
 };
+
+typedef struct ExecRecord {
+	char comm[16];
+
+	struct ExecRecord* previous;
+} ExecRecord;
 
 typedef struct Process {
 	char comm[16];
@@ -34,6 +41,7 @@ typedef struct Process {
 	__u32 status;
 
 	struct Process* parent;
+	struct ExecRecord* exec_history;
 } Process;
 
 enum {
@@ -54,5 +62,9 @@ void agent_destroy(Agent* agent);
 int agent_attach(Agent* agent);
 int agent_init(Agent* agent);
 int agent_run(Agent* agent);
+
+int add_process(Process* processes, Process p);
+Process* search_process(Process* processes, __u32 target_pid);
+void show_processes(Process* processes);
 
 #endif // AGENT_H

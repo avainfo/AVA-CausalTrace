@@ -56,7 +56,7 @@ int BPF_PROG(obs_forks, struct task_struct* p, struct task_struct* c) {
 	e->ptid = BPF_CORE_READ(p, pid);
 	e->type = e->tid == e->pid ? EVENT_FORK : EVENT_THREAD;
 
-	bpf_core_read_str(e->comm, sizeof(e->comm), &c->comm);
+	bpf_core_read_str(e->comm, sizeof(e->comm), &p->comm);
 
 	bpf_ringbuf_submit(e, 0);
 	return 0;

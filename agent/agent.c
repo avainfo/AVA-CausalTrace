@@ -28,24 +28,40 @@ static const char* const program_names[PROGRAM_COUNT] = {
 };
 
 int callback(void* ctx, void* data, size_t size) {
-	(void)ctx;
-
 	if (size < sizeof(struct event))
 		return 0;
 
 	struct event* e = data;
+	Process* processes = ctx;
+
+	Process p = {
+	    .pid = e->pid,
+	    .tid = e->tid,
+	    .ppid = e->ppid,
+	    .ptid = e->ptid,
+	    .exec_history = NULL,
+	};
+
+	memcpy(p.comm, e->comm, sizeof(e->comm));
 
 	switch (e->type) {
 	case EVENT_EXEC:
+		add_process(processes, p);
 		printf("EXEC pid=%u comm=%s\n", e->pid, e->comm);
 		break;
 	case EVENT_FORK:
+		p.pid = e->ppid;
+		p.tid = e->ptid;
+		p.ppid = 0;
+		p.ptid = 0;
+		add_process(processes, p);
 		printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
 		break;
 	case EVENT_EXIT:
 		printf("EXIT pid=%u tid=%u comm=%s\n", e->pid, e->tid, e->comm);
 		break;
 	case EVENT_THREAD:
+		add_process(processes, p);
 		printf("THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid, e->comm);
 		break;
 	}
@@ -54,6 +70,8 @@ int callback(void* ctx, void* data, size_t size) {
 }
 
 void agent_destroy(Agent* agent) {
+	printf("\n");
+	show_processes(agent->processes);
 	for (size_t i = 0; i < PROGRAM_COUNT; i++)
 		bpf_link__destroy(agent->links[i]);
 
