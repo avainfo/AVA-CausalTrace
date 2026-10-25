@@ -24,6 +24,9 @@ struct {
 
 SEC("tp_btf/sched_process_exec")
 int BPF_PROG(obs_execs, struct task_struct* p, pid_t old_pid, struct linux_binprm* bprm) {
+	(void)old_pid;
+	(void)bprm;
+
 	struct event* e;
 
 	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
