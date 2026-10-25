@@ -24,6 +24,8 @@ enum status_type {
 };
 
 typedef struct Process {
+	char comm[16];
+
 	__u32 pid;
 	__u32 tid;
 	__u32 ppid;
