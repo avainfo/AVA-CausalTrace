@@ -21,7 +21,7 @@ bin/agent/%.o: agent/%.c
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(LIBBPF_CFLAGS) -c $< -o $@
 
-$(BPF_OBJ): $(BPF_SRC) include/vmlinux.h
+$(BPF_OBJ): $(BPF_SRC) include/vmlinux.h include/events.h
 	mkdir -p $(dir $@)
 	clang -g -O2 \
 		-target bpf \
