@@ -61,6 +61,8 @@ Process* search_process(Process* processes, __u32 target_pid) {
 }
 
 void show_processes(Process* processes) {
+	if (!processes)
+		return;
 	for (int i = 0; i < HISTORIC_SIZE; i++) {
 		if (processes[i].pid != 0) {
 			printf("Process: %s [%d][%d]\n", processes[i].comm, processes[i].pid, processes[i].tid);
