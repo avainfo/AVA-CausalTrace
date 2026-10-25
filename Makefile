@@ -1,4 +1,3 @@
-
 BPF_NAME = causaltrace
 
 PROG_SRC = $(wildcard agent/*.c)
