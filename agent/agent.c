@@ -50,10 +50,7 @@ int callback(void* ctx, void* data, size_t size) {
 		printf("EXEC pid=%u comm=%s\n", e->pid, e->comm);
 		break;
 	case EVENT_FORK:
-		p.pid = e->ppid;
-		p.tid = e->ptid;
-		p.ppid = 0;
-		p.ptid = 0;
+		ensure_parent(processes, e);
 		add_process(processes, p);
 		printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
 		break;

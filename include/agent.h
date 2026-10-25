@@ -12,6 +12,7 @@
 #ifndef AGENT_H
 #define AGENT_H
 
+#include "events.h"
 #include <stddef.h>
 #ifndef __VMLINUX_H__
 #include <linux/types.h>
@@ -66,5 +67,6 @@ int agent_run(Agent* agent);
 int add_process(Process* processes, Process p);
 Process* search_process(Process* processes, __u32 target_pid);
 void show_processes(Process* processes);
+int ensure_parent(Process* processes, struct event* e);
 
 #endif // AGENT_H

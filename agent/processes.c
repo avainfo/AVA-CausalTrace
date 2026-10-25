@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "agent.h"
+#include "events.h"
 
 int add_process(Process* processes, Process p) {
 	if (!processes || p.pid == 0)
@@ -74,6 +75,28 @@ void show_processes(Process* processes) {
 			printf("\n");
 		}
 	}
+}
+
+int ensure_parent(Process* processes, struct event* e) {
+	if (!processes || !e || e->ppid == 0 || e->ptid == 0)
+		return 0;
+
+	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
+		if (processes[i].pid == e->ppid && processes[i].tid == e->ptid)
+			return 1;
+	}
+
+	Process parent = {
+	    .pid = e->ppid,
+	    .tid = e->ptid,
+	    .ppid = 0,
+	    .ptid = 0,
+	    .exec_history = NULL,
+	};
+
+	memcpy(parent.comm, e->comm, sizeof(parent.comm));
+
+	return add_process(processes, parent);
 }
 
 // TODO: Make the kill process and free all the exec_history
