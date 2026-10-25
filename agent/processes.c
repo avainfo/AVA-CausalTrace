@@ -48,12 +48,12 @@ int add_process(Process* processes, Process p) {
 	return 1;
 }
 
-Process* search_process(Process* processes, __u32 target_pid) {
-	if (!processes || target_pid == 0)
+Process* search_process(Process* processes, __u32 target_pid, __u32 target_tid) {
+	if (!processes || target_pid == 0 || target_tid == 0)
 		return 0;
 
 	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
-		if (processes[i].pid == target_pid) {
+		if (processes[i].pid == target_pid && processes[i].tid == target_tid) {
 			return &processes[i];
 		}
 	}

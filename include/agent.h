@@ -65,7 +65,7 @@ int agent_init(Agent* agent);
 int agent_run(Agent* agent);
 
 int add_process(Process* processes, Process p);
-Process* search_process(Process* processes, __u32 target_pid);
+Process* search_process(Process* processes, __u32 target_pid, __u32 target_tid);
 void show_processes(Process* processes);
 int ensure_parent(Process* processes, struct event* e);
 
