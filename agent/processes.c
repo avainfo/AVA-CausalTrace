@@ -125,13 +125,6 @@ void free_processes(Process* processes) {
 			free(eh);
 			eh = next;
 		}
+		processes[i].exec_history = NULL;
 	}
-}
-
-void free_exec_history(ExecRecord* eh) {
-	if (!eh)
-		return;
-
-	free_exec_history(eh->previous);
-	free(eh);
 }

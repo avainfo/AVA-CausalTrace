@@ -70,6 +70,5 @@ void show_processes(Process* processes);
 int ensure_parent(Process* processes, struct event* e);
 int kill_process(Process* processes, Process p);
 void free_processes(Process* processes);
-void free_exec_history(ExecRecord* eh);
 
 #endif // AGENT_H

@@ -75,6 +75,7 @@ void agent_destroy(Agent* agent) {
 		bpf_link__destroy(agent->links[i]);
 
 	ring_buffer__free(agent->rb);
+	free_processes(agent->processes);
 	free(agent->processes);
 	bpf_object__close(agent->obj);
 }
