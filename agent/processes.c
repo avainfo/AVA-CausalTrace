@@ -53,8 +53,8 @@ Process* search_process(Process* processes, Process p) {
 		return NULL;
 
 	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
-		if (processes[i].pid == p.pid && processes[i].tid == p.tid && processes[i].tid == p.ppid &&
-		    processes[i].tid == p.ptid) {
+		if (processes[i].pid == p.pid && processes[i].tid == p.tid && processes[i].ppid == p.ppid &&
+		    processes[i].ptid == p.ptid) {
 			return &processes[i];
 		}
 	}
@@ -110,6 +110,8 @@ int kill_process(Process* processes, Process p) {
 	if (!target)
 		return 0;
 
+	target->status = STATUS_EXITED;
+
 	return 1;
 }
 
@@ -118,7 +120,11 @@ void free_processes(Process* processes) {
 		if (processes[i].pid == 0)
 			continue;
 		ExecRecord* eh = processes[i].exec_history;
-		free_exec_history(eh);
+		while (eh) {
+			ExecRecord* next = eh->previous;
+			free(eh);
+			eh = next;
+		}
 	}
 }
 
