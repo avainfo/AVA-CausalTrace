@@ -48,12 +48,13 @@ int add_process(Process* processes, Process p) {
 	return 1;
 }
 
-Process* search_process(Process* processes, __u32 target_pid, __u32 target_tid) {
-	if (!processes || target_pid == 0 || target_tid == 0)
+Process* search_process(Process* processes, Process p) {
+	if (!processes || p.pid == 0 || p.tid == 0 || p.ppid == 0 || p.ptid == 0)
 		return NULL;
 
 	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
-		if (processes[i].pid == target_pid && processes[i].tid == target_tid) {
+		if (processes[i].pid == p.pid && processes[i].tid == p.tid && processes[i].tid == p.ppid &&
+		    processes[i].tid == p.ptid) {
 			return &processes[i];
 		}
 	}
@@ -101,4 +102,30 @@ int ensure_parent(Process* processes, struct event* e) {
 	return add_process(processes, parent);
 }
 
-// TODO: Make the kill process and free all the exec_history
+int kill_process(Process* processes, Process p) {
+	if (!processes || p.pid == 0 || p.tid == 0 || p.ppid == 0 || p.ptid == 0)
+		return 0;
+
+	Process* target = search_process(processes, p);
+	if (!target)
+		return 0;
+
+	return 1;
+}
+
+void free_processes(Process* processes) {
+	for (int i = 0; i < HISTORIC_SIZE; i++) {
+		if (processes[i].pid == 0)
+			continue;
+		ExecRecord* eh = processes[i].exec_history;
+		free_exec_history(eh);
+	}
+}
+
+void free_exec_history(ExecRecord* eh) {
+	if (!eh)
+		return;
+
+	free_exec_history(eh->previous);
+	free(eh);
+}
