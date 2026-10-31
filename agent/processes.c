@@ -67,6 +67,9 @@ void show_processes(Process* processes) {
 	for (int i = 0; i < HISTORIC_SIZE; i++) {
 		if (processes[i].pid != 0) {
 			printf("Process: %s [%d][%d]\n", processes[i].comm, processes[i].pid, processes[i].tid);
+			printf("  status: %s\n", processes[i].status == 0   ? "UNKOWN"
+			                         : processes[i].status == 1 ? "RUNNING"
+			                                                    : "EXITED");
 			ExecRecord* eh = processes[i].exec_history;
 			int j = 0;
 			while (eh && j < 10) {
@@ -102,7 +105,7 @@ int ensure_parent(Process* processes, struct event* e) {
 	return add_process(processes, parent);
 }
 
-int kill_process(Process* processes, Process p) {
+int exit_process(Process* processes, Process p) {
 	if (!processes || p.pid == 0 || p.tid == 0 || p.ppid == 0 || p.ptid == 0)
 		return 0;
 

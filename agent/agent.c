@@ -40,6 +40,7 @@ int callback(void* ctx, void* data, size_t size) {
 	    .ppid = e->ppid,
 	    .ptid = e->ptid,
 	    .exec_history = NULL,
+	    .status = 0,
 	};
 
 	memcpy(p.comm, e->comm, sizeof(e->comm));
@@ -57,6 +58,7 @@ int callback(void* ctx, void* data, size_t size) {
 		printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
 		break;
 	case EVENT_EXIT:
+		exit_process(processes, p);
 		printf("EXIT pid=%u tid=%u comm=%s\n", e->pid, e->tid, e->comm);
 		break;
 	case EVENT_THREAD:

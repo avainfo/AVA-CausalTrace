@@ -68,7 +68,7 @@ int add_process(Process* processes, Process p);
 Process* search_process(Process* processes, Process p);
 void show_processes(Process* processes);
 int ensure_parent(Process* processes, struct event* e);
-int kill_process(Process* processes, Process p);
+int exit_process(Process* processes, Process p);
 void free_processes(Process* processes);
 
 #endif // AGENT_H
