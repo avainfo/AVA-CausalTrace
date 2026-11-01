@@ -39,15 +39,8 @@ int add_process(Process* processes, Process p) {
 			processes[i] = p;
 			return 1;
 		}
-		if (processes[i].pid == p.ppid && processes[i].tid == p.ptid) {
-			Process* parent = malloc(sizeof(*parent));
-			if (!parent)
-				return 0;
-			*parent = processes[i];
-			p.parent = parent;
-			processes[i] = p;
-			return 1;
-		}
+		if (processes[i].pid == p.ppid && processes[i].tid == p.ptid)
+			p.parent = &processes[i];
 		if (!free_slot && processes[i].pid == 0)
 			free_slot = &processes[i];
 	}
@@ -106,7 +99,7 @@ void show_processes(Process* processes) {
 				for (int k = 0; k < j; k++) {
 					putchar(' ');
 				}
-				printf("%s%s [%d]", CHILD_CHARS, parent->comm, parent->parent == NULL);
+				printf("%s%s [%d][%d]", CHILD_CHARS, parent->comm, parent->pid, parent->tid);
 				ExecRecord* eh = parent->exec_history;
 				while (eh) {
 					printf(" -> %s", eh->comm);
