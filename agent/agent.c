@@ -58,8 +58,8 @@ int callback(void* ctx, void* data, size_t size) {
 		printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
 		break;
 	case EVENT_EXIT:
-		exit_process(processes, p);
-		printf("EXIT pid=%u tid=%u comm=%s\n", e->pid, e->tid, e->comm);
+		if (!exit_process(processes, p))
+			fprintf(stderr, "EXIT: task not found pid=%u tid=%u\n", e->pid, e->tid);
 		break;
 	case EVENT_THREAD:
 		p.status = STATUS_RUNNING;
