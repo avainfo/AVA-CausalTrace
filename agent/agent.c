@@ -41,6 +41,7 @@ int callback(void* ctx, void* data, size_t size) {
 	    .ptid = e->ptid,
 	    .exec_history = NULL,
 	    .status = 0,
+		.parent = NULL,
 	};
 
 	memcpy(p.comm, e->comm, sizeof(e->comm));

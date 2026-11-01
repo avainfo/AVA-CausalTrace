@@ -16,6 +16,7 @@
 
 #include "agent.h"
 #include "events.h"
+#include "formating.h"
 
 int add_process(Process* processes, Process p) {
 	if (!processes || p.pid == 0)
@@ -33,8 +34,21 @@ int add_process(Process* processes, Process p) {
 			memcpy(eh->comm, processes[i].comm, sizeof(eh->comm));
 
 			p.exec_history = eh;
+			p.parent = processes[i].parent;
 
 			processes[i] = p;
+			printf("Adding a double process: %s[%d][%d]\n", p.comm, p.pid, p.tid);
+			return 1;
+		}
+		if (processes[i].pid == p.ppid && processes[i].tid == p.ptid) {
+			Process* parent = malloc(sizeof(*parent));
+			if (!parent)
+				return 0;
+			*parent = processes[i];
+			p.parent = parent;
+			processes[i] = p;
+			printf("Adding process: %s[%d][%d] with parent: %s[%d][%d]\n", p.comm, p.pid, p.tid, p.parent->comm,
+			       p.parent->pid, p.parent->tid);
 			return 1;
 		}
 		if (!free_slot && processes[i].pid == 0)
@@ -44,7 +58,15 @@ int add_process(Process* processes, Process p) {
 	if (!free_slot)
 		return 0;
 
+	Process parent_target = {
+	    .pid = p.ppid,
+	    .tid = p.ptid,
+	};
+
+	p.parent = search_process(processes, parent_target);
+
 	*free_slot = p;
+	printf("Adding process in freeslot: %s[%d][%d]\n", p.comm, p.pid, p.tid);
 	return 1;
 }
 
@@ -56,6 +78,13 @@ Process* search_process(Process* processes, Process p) {
 		if (processes[i].pid == p.pid && processes[i].tid == p.tid) {
 			return &processes[i];
 		}
+		Process* parent = processes[i].parent;
+		while (parent != NULL) {
+			if (parent->pid == p.pid && parent->tid == p.tid) {
+				return parent;
+			}
+			parent = parent->parent;
+		}
 	}
 	return NULL;
 }
@@ -66,18 +95,31 @@ void show_processes(Process* processes) {
 	for (int i = 0; i < HISTORIC_SIZE; i++) {
 		if (processes[i].pid != 0) {
 			printf("Process: %s [%d][%d]\n", processes[i].comm, processes[i].pid, processes[i].tid);
-			printf("  status: %s\n", processes[i].status == 0   ? "UNKOWN"
-			                         : processes[i].status == 1 ? "RUNNING"
-			                                                    : "EXITED");
+			printf("  status: %s", processes[i].status == 0   ? "UNKOWN"
+			                       : processes[i].status == 1 ? "RUNNING"
+			                                                  : "EXITED");
 			ExecRecord* eh = processes[i].exec_history;
-			int j = 0;
-			while (eh && j < 10) {
-				printf("  - %s | current=%p | previous=%p\n", eh->comm, (void*)eh, (void*)eh->previous);
-
+			while (eh) {
+				printf(" -> %s", eh->comm);
 				eh = eh->previous;
-				j++;
 			}
 			printf("\n");
+			Process* parent = processes[i].parent;
+			int j = 2;
+			while (parent) {
+				for (int k = 0; k < j; k++) {
+					putchar(' ');
+				}
+				printf("%s%s [%d]", CHILD_CHARS, parent->comm, parent->parent == NULL);
+				ExecRecord* eh = parent->exec_history;
+				while (eh) {
+					printf(" -> %s", eh->comm);
+					eh = eh->previous;
+				}
+				printf("\n");
+				parent = parent->parent;
+				j += 2;
+			}
 		}
 	}
 }
@@ -94,8 +136,8 @@ int ensure_parent(Process* processes, struct event* e) {
 	Process parent = {
 	    .pid = e->ppid,
 	    .tid = e->ptid,
-	    .ppid = 0,
-	    .ptid = 0,
+	    .ppid = -1,
+	    .ptid = -1,
 	    .exec_history = NULL,
 	    .status = STATUS_RUNNING,
 	};
