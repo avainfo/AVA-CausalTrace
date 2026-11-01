@@ -49,7 +49,7 @@ int add_process(Process* processes, Process p) {
 }
 
 Process* search_process(Process* processes, Process p) {
-	if (!processes || p.pid == 0 || p.tid == 0 || p.ppid == 0 || p.ptid == 0)
+	if (!processes || p.pid == 0 || p.tid == 0)
 		return NULL;
 
 	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
