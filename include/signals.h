@@ -15,4 +15,4 @@
 int signals_init(void);
 int signals_running(void);
 
-#endif
+#endif //SIGNALS_H

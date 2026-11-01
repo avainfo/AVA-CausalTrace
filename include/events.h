@@ -9,8 +9,8 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#ifndef AVA_EVENTS_H
-#define AVA_EVENTS_H
+#ifndef EVENTS_H
+#define EVENTS_H
 
 #ifndef __VMLINUX_H__
 #include <linux/types.h>
@@ -35,4 +35,4 @@ struct event {
 	char comm[16];
 };
 
-#endif
+#endif // EVENTS_H
