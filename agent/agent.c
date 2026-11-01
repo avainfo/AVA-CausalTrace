@@ -41,7 +41,7 @@ int callback(void* ctx, void* data, size_t size) {
 	    .ptid = e->ptid,
 	    .exec_history = NULL,
 	    .status = 0,
-		.parent = NULL,
+	    .parent = NULL,
 	};
 
 	memcpy(p.comm, e->comm, sizeof(e->comm));
@@ -61,6 +61,7 @@ int callback(void* ctx, void* data, size_t size) {
 	case EVENT_EXIT:
 		if (!exit_process(processes, p))
 			fprintf(stderr, "EXIT: task not found pid=%u tid=%u\n", e->pid, e->tid);
+		printf("EXIT pid=%u comm=%s\n", e->pid, e->comm);
 		break;
 	case EVENT_THREAD:
 		p.status = STATUS_RUNNING;

@@ -37,7 +37,6 @@ int add_process(Process* processes, Process p) {
 			p.parent = processes[i].parent;
 
 			processes[i] = p;
-			printf("Adding a double process: %s[%d][%d]\n", p.comm, p.pid, p.tid);
 			return 1;
 		}
 		if (processes[i].pid == p.ppid && processes[i].tid == p.ptid) {
@@ -47,8 +46,6 @@ int add_process(Process* processes, Process p) {
 			*parent = processes[i];
 			p.parent = parent;
 			processes[i] = p;
-			printf("Adding process: %s[%d][%d] with parent: %s[%d][%d]\n", p.comm, p.pid, p.tid, p.parent->comm,
-			       p.parent->pid, p.parent->tid);
 			return 1;
 		}
 		if (!free_slot && processes[i].pid == 0)
@@ -66,7 +63,6 @@ int add_process(Process* processes, Process p) {
 	p.parent = search_process(processes, parent_target);
 
 	*free_slot = p;
-	printf("Adding process in freeslot: %s[%d][%d]\n", p.comm, p.pid, p.tid);
 	return 1;
 }
 
