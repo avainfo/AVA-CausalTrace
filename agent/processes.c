@@ -97,6 +97,7 @@ int ensure_parent(Process* processes, struct event* e) {
 	    .ppid = 0,
 	    .ptid = 0,
 	    .exec_history = NULL,
+	    .status = STATUS_RUNNING,
 	};
 
 	memcpy(parent.comm, e->comm, sizeof(parent.comm));
