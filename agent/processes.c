@@ -53,8 +53,7 @@ Process* search_process(Process* processes, Process p) {
 		return NULL;
 
 	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
-		if (processes[i].pid == p.pid && processes[i].tid == p.tid && processes[i].ppid == p.ppid &&
-		    processes[i].ptid == p.ptid) {
+		if (processes[i].pid == p.pid && processes[i].tid == p.tid) {
 			return &processes[i];
 		}
 	}

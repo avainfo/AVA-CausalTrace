@@ -62,6 +62,7 @@ int callback(void* ctx, void* data, size_t size) {
 		printf("EXIT pid=%u tid=%u comm=%s\n", e->pid, e->tid, e->comm);
 		break;
 	case EVENT_THREAD:
+		p.status = STATUS_RUNNING;
 		add_process(processes, p);
 		printf("THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid, e->comm);
 		break;
