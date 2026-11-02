@@ -41,7 +41,7 @@ int add_process(Process* processes, Process p) {
 		}
 		if (processes[i].pid == p.ppid && processes[i].tid == p.ptid)
 			p.parent = &processes[i];
-		if (!free_slot && processes[i].pid == 0)
+		if (!free_slot && processes[i].pid == 0 && processes[i].tid == 0)
 			free_slot = &processes[i];
 	}
 
