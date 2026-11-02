@@ -69,6 +69,7 @@ Process* search_process(Process* processes, Process p);
 void show_processes(Process* processes);
 int ensure_parent(Process* processes, struct event* e);
 int exit_process(Process* processes, Process p);
+void evict_process(Process* processes);
 void free_processes(Process* processes);
 
 #endif // AGENT_H

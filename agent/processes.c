@@ -149,6 +149,14 @@ int exit_process(Process* processes, Process p) {
 	return 1;
 }
 
+void evict_process(Process* processes) {
+	// If the proc is RUNNING, it remains conserved.
+	// If the proc is EXITED, it becomes a candidate for eviction.
+	// If the proc is a parent, it remains conserved.
+	// If a proc is evicted, we need to free all ExecRecords.
+	(void)processes;
+}
+
 void free_processes(Process* processes) {
 	for (int i = 0; i < HISTORIC_SIZE; i++) {
 		if (processes[i].pid == 0)
