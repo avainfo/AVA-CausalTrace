@@ -18,21 +18,13 @@
 #include "events.h"
 #include "formating.h"
 
-int is_referenced(Process* processes, Process p) {
-	if (!processes || p.pid == 0 || p.tid == 0)
+int is_referenced(Process* processes, Process* p) {
+	if (!processes || p->pid == 0 || p->tid == 0)
 		return 0;
 
 	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
-		if (processes[i].ppid == p.pid && processes[i].ptid == p.tid) {
+		if (processes[i].pid != 0 && processes[i].parent == p)
 			return 1;
-		}
-		Process* parent = processes[i].parent;
-		while (parent != NULL) {
-			if (parent->pid == p.pid && parent->tid == p.tid) {
-				return 1;
-			}
-			parent = parent->parent;
-		}
 	}
 	return 0;
 }
@@ -160,7 +152,7 @@ int ensure_parent(Process* processes, struct event* e) {
 }
 
 int exit_process(Process* processes, Process p) {
-	if (!processes || p.pid == 0 || p.tid == 0 || p.ppid == 0 || p.ptid == 0)
+	if (!processes || p.pid == 0 || p.tid == 0)
 		return 0;
 
 	Process* target = search_process(processes, p);
@@ -179,8 +171,7 @@ int evict_process(Process* processes) {
 	// If a proc is evicted, we need to free all ExecRecords.
 	Process* candidate = NULL;
 	for (int i = 0; i < HISTORIC_SIZE; i++) {
-		Process p = processes[i];
-		if (p.status == STATUS_EXITED && !is_referenced(processes, p)) {
+		if (processes[i].status == STATUS_EXITED && !is_referenced(processes, &processes[i])) {
 			candidate = &processes[i];
 			break;
 		}
