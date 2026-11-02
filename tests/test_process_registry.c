@@ -106,6 +106,41 @@ static void test_exec_history_lifecycle(void) {
 	puts("PASS: exec history stored and released");
 }
 
+static void test_synthetic_parent_identity(void) {
+	Process* table = new_table();
+
+	struct event e = {
+	    .type = EVENT_FORK,
+	    .pid = 1200,
+	    .tid = 1200,
+	    .ppid = 1154,
+	    .ptid = 1154,
+	    .start_time_ns = 200,
+	    .p_start_time_ns = 100,
+	    .comm = "bash",
+	};
+
+	assert(ensure_parent(table, &e) == 1);
+
+	Process child = {
+	    .pid = e.pid,
+	    .tid = e.tid,
+	    .ppid = e.ppid,
+	    .ptid = e.ptid,
+	    .start_time_ns = e.start_time_ns,
+	    .parent_start_time_ns = e.p_start_time_ns,
+	    .status = STATUS_RUNNING,
+	};
+
+	assert(add_process(table, child) == 1);
+
+	assert(table[0].start_time_ns == 100);
+	assert(table[1].parent == &table[0]);
+
+	destroy_table(table);
+	puts("PASS: synthetic parent retains correct task identity");
+}
+
 #ifdef TEST_PID_REUSE
 static size_t count_task_instances(const Process* table, unsigned pid, unsigned tid) {
 	size_t count = 0;
@@ -199,6 +234,7 @@ int main(void) {
 	test_no_eligible_candidate();
 	test_insert_reuses_eligible_slot();
 	test_exec_history_lifecycle();
+	test_synthetic_parent_identity();
 #ifdef TEST_PID_REUSE
 	test_pid_reuse_does_not_merge_instances();
 	test_parent_pid_reuse_preserves_lineage();
