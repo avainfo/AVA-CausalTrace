@@ -28,7 +28,7 @@ int is_referenced(Process* processes, Process p) {
 		}
 		Process* parent = processes[i].parent;
 		while (parent != NULL) {
-			if (parent->ppid == p.pid && parent->ptid == p.tid) {
+			if (parent->pid == p.pid && parent->tid == p.tid) {
 				return 1;
 			}
 			parent = parent->parent;
@@ -64,8 +64,12 @@ int add_process(Process* processes, Process p) {
 			free_slot = &processes[i];
 	}
 
-	if (!free_slot)
+	if (!free_slot) {
+		if (evict_process(processes)) {
+			return add_process(processes, p);
+		}
 		return 0;
+	}
 
 	Process parent_target = {
 	    .pid = p.ppid,
