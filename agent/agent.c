@@ -143,7 +143,12 @@ int agent_init(Agent* agent) {
 		return -1;
 	}
 
-	return agent_attach(agent);
+	err = agent_attach(agent);
+	if (err)
+		return err;
+
+	fprintf(stderr, "CausalTrace: ready\n");
+	return 0;
 }
 
 int agent_run(Agent* agent) {
