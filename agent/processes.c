@@ -53,14 +53,6 @@ int add_process(Process* processes, Process p) {
 
 		if (!free_slot && processes[i].pid == 0 && processes[i].tid == 0)
 			free_slot = &processes[i];
-
-		Process parent_target = {
-		    .pid = p.ppid,
-		    .tid = p.ptid,
-		    .start_time_ns = p.parent_start_time_ns,
-		};
-
-		p.parent = search_process(processes, parent_target);
 	}
 
 	if (!free_slot) {
@@ -73,6 +65,7 @@ int add_process(Process* processes, Process p) {
 	Process parent_target = {
 	    .pid = p.ppid,
 	    .tid = p.ptid,
+	    .start_time_ns = p.parent_start_time_ns,
 	};
 
 	p.parent = search_process(processes, parent_target);
@@ -148,9 +141,12 @@ int ensure_parent(Process* processes, struct event* e) {
 	Process parent = {
 	    .pid = e->ppid,
 	    .tid = e->ptid,
-	    .ppid = -1,
-	    .ptid = -1,
+	    .ppid = 0,
+	    .ptid = 0,
+	    .start_time_ns = e->p_start_time_ns,
+	    .parent_start_time_ns = 0,
 	    .exec_history = NULL,
+	    .parent = NULL,
 	    .status = STATUS_RUNNING,
 	};
 
