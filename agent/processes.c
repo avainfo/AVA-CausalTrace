@@ -18,6 +18,25 @@
 #include "events.h"
 #include "formating.h"
 
+int is_referenced(Process* processes, Process p) {
+	if (!processes || p.pid == 0 || p.tid == 0)
+		return 0;
+
+	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
+		if (processes[i].ppid == p.pid && processes[i].ptid == p.tid) {
+			return 1;
+		}
+		Process* parent = processes[i].parent;
+		while (parent != NULL) {
+			if (parent->ppid == p.pid && parent->ptid == p.tid) {
+				return 1;
+			}
+			parent = parent->parent;
+		}
+	}
+	return 0;
+}
+
 int add_process(Process* processes, Process p) {
 	if (!processes || p.pid == 0)
 		return 0;
@@ -149,12 +168,31 @@ int exit_process(Process* processes, Process p) {
 	return 1;
 }
 
-void evict_process(Process* processes) {
+int evict_process(Process* processes) {
 	// If the proc is RUNNING, it remains conserved.
 	// If the proc is EXITED, it becomes a candidate for eviction.
 	// If the proc is a parent, it remains conserved.
 	// If a proc is evicted, we need to free all ExecRecords.
-	(void)processes;
+	Process* candidate = NULL;
+	for (int i = 0; i < HISTORIC_SIZE; i++) {
+		Process p = processes[i];
+		if (p.status == STATUS_EXITED && !is_referenced(processes, p)) {
+			candidate = &processes[i];
+			break;
+		}
+	}
+
+	if (candidate) {
+		ExecRecord* eh = candidate->exec_history;
+		while (eh) {
+			ExecRecord* old_eh = eh;
+			eh = eh->previous;
+			free(old_eh);
+		}
+		memset(candidate, 0, sizeof(*candidate));
+		return 1;
+	}
+	return 0;
 }
 
 void free_processes(Process* processes) {
