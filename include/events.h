@@ -32,6 +32,9 @@ struct event {
 	__u32 ppid;
 	__u32 ptid;
 
+	__u64 start_time_ns;
+	__u64 p_start_time_ns;
+
 	char comm[16];
 };
 

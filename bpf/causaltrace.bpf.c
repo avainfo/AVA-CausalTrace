@@ -37,6 +37,8 @@ int BPF_PROG(obs_execs, struct task_struct* p, pid_t old_pid, struct linux_binpr
 	e->tid = BPF_CORE_READ(p, pid);
 	e->ppid = BPF_CORE_READ(p, real_parent, tgid);
 	e->ptid = BPF_CORE_READ(p, real_parent, pid);
+	e->start_time_ns = BPF_CORE_READ(p, start_time);
+	e->p_start_time_ns = BPF_CORE_READ(p, real_parent, start_time);
 	e->type = EVENT_EXEC;
 
 	bpf_core_read_str(e->comm, sizeof(e->comm), &p->comm);
@@ -57,6 +59,8 @@ int BPF_PROG(obs_forks, struct task_struct* p, struct task_struct* c) {
 	e->tid = BPF_CORE_READ(c, pid);
 	e->ppid = BPF_CORE_READ(p, tgid);
 	e->ptid = BPF_CORE_READ(p, pid);
+	e->start_time_ns = BPF_CORE_READ(c, start_time);
+	e->p_start_time_ns = BPF_CORE_READ(p, start_time);
 	e->type = e->tid == e->pid ? EVENT_FORK : EVENT_THREAD;
 
 	bpf_core_read_str(e->comm, sizeof(e->comm), &p->comm);
@@ -77,6 +81,8 @@ int BPF_PROG(obs_exits, struct task_struct* p) {
 	e->tid = BPF_CORE_READ(p, pid);
 	e->ppid = BPF_CORE_READ(p, real_parent, tgid);
 	e->ptid = BPF_CORE_READ(p, real_parent, pid);
+	e->start_time_ns = BPF_CORE_READ(p, start_time);
+	e->p_start_time_ns = BPF_CORE_READ(p, real_parent, start_time);
 	e->type = EVENT_EXIT;
 
 	bpf_core_read_str(e->comm, sizeof(e->comm), &p->comm);

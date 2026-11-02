@@ -35,7 +35,7 @@ int add_process(Process* processes, Process p) {
 
 	Process* free_slot = NULL;
 	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
-		if (processes[i].pid == p.pid && processes[i].tid == p.tid) {
+		if (processes[i].pid == p.pid && processes[i].tid == p.tid && processes[i].start_time_ns == p.start_time_ns) {
 			ExecRecord* eh = malloc(sizeof(*eh));
 			if (!eh)
 				return 0;
@@ -50,7 +50,8 @@ int add_process(Process* processes, Process p) {
 			processes[i] = p;
 			return 1;
 		}
-		if (processes[i].pid == p.ppid && processes[i].tid == p.ptid)
+		if (processes[i].pid == p.ppid && processes[i].tid == p.ptid &&
+		    processes[i].start_time_ns == p.parent_start_time_ns)
 			p.parent = &processes[i];
 		if (!free_slot && processes[i].pid == 0 && processes[i].tid == 0)
 			free_slot = &processes[i];
@@ -79,12 +80,12 @@ Process* search_process(Process* processes, Process p) {
 		return NULL;
 
 	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
-		if (processes[i].pid == p.pid && processes[i].tid == p.tid) {
+		if (processes[i].pid == p.pid && processes[i].tid == p.tid && processes[i].start_time_ns == p.start_time_ns) {
 			return &processes[i];
 		}
 		Process* parent = processes[i].parent;
 		while (parent != NULL) {
-			if (parent->pid == p.pid && parent->tid == p.tid) {
+			if (parent->pid == p.pid && parent->tid == p.tid && parent->start_time_ns == p.start_time_ns) {
 				return parent;
 			}
 			parent = parent->parent;
@@ -133,7 +134,8 @@ int ensure_parent(Process* processes, struct event* e) {
 		return 0;
 
 	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
-		if (processes[i].pid == e->ppid && processes[i].tid == e->ptid)
+		if (processes[i].pid == e->ppid && processes[i].tid == e->ptid &&
+		    processes[i].start_time_ns == e->p_start_time_ns)
 			return 1;
 	}
 

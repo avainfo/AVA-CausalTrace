@@ -39,6 +39,8 @@ int callback(void* ctx, void* data, size_t size) {
 	    .tid = e->tid,
 	    .ppid = e->ppid,
 	    .ptid = e->ptid,
+	    .start_time_ns = e->start_time_ns,
+	    .parent_start_time_ns = e->p_start_time_ns,
 	    .exec_history = NULL,
 	    .status = 0,
 	    .parent = NULL,
