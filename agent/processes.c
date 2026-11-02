@@ -50,11 +50,17 @@ int add_process(Process* processes, Process p) {
 			processes[i] = p;
 			return 1;
 		}
-		if (processes[i].pid == p.ppid && processes[i].tid == p.ptid &&
-		    processes[i].start_time_ns == p.parent_start_time_ns)
-			p.parent = &processes[i];
+
 		if (!free_slot && processes[i].pid == 0 && processes[i].tid == 0)
 			free_slot = &processes[i];
+
+		Process parent_target = {
+		    .pid = p.ppid,
+		    .tid = p.ptid,
+		    .start_time_ns = p.parent_start_time_ns,
+		};
+
+		p.parent = search_process(processes, parent_target);
 	}
 
 	if (!free_slot) {

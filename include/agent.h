@@ -67,6 +67,7 @@ int agent_attach(Agent* agent);
 int agent_init(Agent* agent);
 int agent_run(Agent* agent);
 
+int is_referenced(Process* processes, Process* p);
 int add_process(Process* processes, Process p);
 Process* search_process(Process* processes, Process p);
 void show_processes(Process* processes);
