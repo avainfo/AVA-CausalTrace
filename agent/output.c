@@ -16,6 +16,7 @@
 #include <bpf/libbpf.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void spacer(const int j) {
 	for (int i = 0; i < j; i++)
@@ -62,29 +63,47 @@ void show_processes(Process* processes) {
 }
 
 void show_statistics(struct bpf_object* obj) {
-	printf("Ava CausalTrace statistics\n");
-	printf("  Ring buffer drops:\n");
-
 	struct bpf_map* map = bpf_object__find_map_by_name(obj, "ringbuf_drops");
-	size_t value_size = libbpf_num_possible_cpus() * sizeof(__u64);
 	if (!map) {
 		fprintf(stderr, "BPF map not found: ringbuf_drops\n");
 		return;
 	}
 
-	int total = 0;
-	for (__u64 i = 1; i <= 4; i++) {
+	int ncpus = libbpf_num_possible_cpus();
+	if (ncpus < 0) {
+		fprintf(stderr, "Failed to get possible CPU count: %d\n", ncpus);
+		return;
+	}
+
+	__u64* values = calloc((size_t)ncpus, sizeof(*values));
+	if (!values) {
+		perror("calloc");
+		return;
+	}
+
+	printf("Ava CausalTrace statistics\n");
+	printf("  Ring buffer drops:\n");
+
+	__u64 total = 0;
+	for (__u32 i = 1; i <= 4; i++) {
 		spacer(4);
 
 		char* title = i == 1 ? "EXEC" : i == 2 ? "FORK" : i == 3 ? "EXIT" : "THREAD";
 
-		__u64* value = NULL;
+		int err = bpf_map__lookup_elem(map, &i, sizeof(i), values, ncpus * sizeof(*values), 0);
+		if (err) {
+			fprintf(stderr, "Lookup failed for %s: %d\n", title, err);
+			continue;
+		}
 
-		bpf_map__lookup_elem(map, &i, sizeof(__u32), value, value_size, 0);
-		total += value ? *value : 0;
+		__u64 count = 0;
+		for (int cpu = 0; cpu < ncpus; cpu++)
+			count += values[cpu];
 
-		printf("%s:\t%llu\n", title, value ? *value : 0);
+		total += count;
+		printf("%s:\t%llu\n", title, count);
 	}
 	spacer(4);
-	printf("Total:\t%u\n", total);
+	printf("Total:\t%llu\n", total);
+	free(values);
 }
