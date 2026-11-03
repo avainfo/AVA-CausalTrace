@@ -59,7 +59,7 @@ int callback(void* ctx, void* data, size_t size) {
 	case EVENT_FORK:
 		p.status = STATUS_RUNNING;
 		if (!ensure_parent(processes, e)) {
-			fprintf(stderr, "Failed to ensure parent");
+			fprintf(stderr, "Failed to ensure parent ppid=%u ptid=%u for child pid=%u\n", e->ppid, e->ptid, e->pid);
 			break;
 		}
 		if (add_process(processes, p))
@@ -74,8 +74,11 @@ int callback(void* ctx, void* data, size_t size) {
 		break;
 	case EVENT_THREAD:
 		p.status = STATUS_RUNNING;
-		add_process(processes, p);
-		printf("THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid, e->comm);
+		if (add_process(processes, p))
+			printf("THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid, e->comm);
+		else
+			fprintf(stderr, "Failed to add the THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid,
+			        e->comm);
 		break;
 	}
 
