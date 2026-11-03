@@ -39,11 +39,10 @@ int count_exec_record(Process* p) {
 	return i;
 }
 
+// TODO: Add to show processes and to the process the number of popped ER
 int pop_exec_record(Process* p) {
 	ExecRecord* eh = p->exec_history;
-	while (eh != NULL) {
-		if (!eh->previous->previous)
-			break;
+	while (eh->previous->previous) {
 		eh = eh->previous;
 	}
 	fprintf(stderr, "Popping last exec record (%s)\n", eh->previous->comm);
