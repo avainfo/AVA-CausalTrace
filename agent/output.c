@@ -17,18 +17,37 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void spacer(const int j) {
 	for (int i = 0; i < j; i++)
 		putchar(' ');
 }
 
+void print_title(char* title) {
+	int title_len = strlen(title);
+
+	printf("\n%s", BOX_TL);
+	for (int i = 0; i < title_len + 2; i++) {
+		printf("%s", BOX_H);
+	}
+	printf("%s\n%s %s %s\n%s", BOX_TR, BOX_V, title, BOX_V, BOX_BL);
+	for (int i = 0; i < title_len + 2; i++) {
+		printf("%s", BOX_H);
+	}
+	printf("%s\n", BOX_BR);
+}
+
 void show_processes(Process* processes) {
 	if (!processes)
 		return;
 
+	print_title("Processes");
+	int empty = 1;
 	for (int i = 0; i < HISTORIC_SIZE; i++) {
 		if (processes[i].pid != 0) {
+			if (empty)
+				empty = 0;
 			printf("Process: %s [%d][%d]", processes[i].comm, processes[i].pid, processes[i].tid);
 
 			ExecRecord* eh = processes[i].exec_history;
@@ -60,6 +79,8 @@ void show_processes(Process* processes) {
 			}
 		}
 	}
+	if (empty)
+		printf("None\n");
 }
 
 void show_statistics(struct bpf_object* obj) {
@@ -81,12 +102,12 @@ void show_statistics(struct bpf_object* obj) {
 		return;
 	}
 
-	printf("Ava CausalTrace statistics\n");
-	printf("  Ring buffer drops:\n");
+	print_title("Ava CausalTrace statistics");
+	printf("Ring buffer drops:\n");
 
 	__u64 total = 0;
 	for (__u32 i = 1; i <= 4; i++) {
-		spacer(4);
+		spacer(2);
 
 		char* title = i == 1 ? "EXEC" : i == 2 ? "FORK" : i == 3 ? "EXIT" : "THREAD";
 
@@ -101,9 +122,9 @@ void show_statistics(struct bpf_object* obj) {
 			count += values[cpu];
 
 		total += count;
-		printf("%s:\t%llu\n", title, count);
+		printf("%s%s:\t%llu\n", CHILD_CHARS, title, count);
 	}
-	spacer(4);
-	printf("Total:\t%llu\n", total);
+	spacer(2);
+	printf("%sTotal:\t%llu\n", CHILD_CHARS, total);
 	free(values);
 }
