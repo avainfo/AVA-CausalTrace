@@ -51,14 +51,21 @@ int callback(void* ctx, void* data, size_t size) {
 	switch (e->type) {
 	case EVENT_EXEC:
 		p.status = STATUS_RUNNING;
-		add_process(processes, p);
-		printf("EXEC pid=%u comm=%s\n", e->pid, e->comm);
+		if (add_process(processes, p))
+			printf("EXEC pid=%u comm=%s\n", e->pid, e->comm);
+		else
+			fprintf(stderr, "Failed to add the EXEC pid=%u comm=%s\n", e->pid, e->comm);
 		break;
 	case EVENT_FORK:
 		p.status = STATUS_RUNNING;
-		ensure_parent(processes, e);
-		add_process(processes, p);
-		printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
+		if (!ensure_parent(processes, e)) {
+			fprintf(stderr, "Failed to ensure parent");
+			break;
+		}
+		if (add_process(processes, p))
+			printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
+		else
+			fprintf(stderr, "Failed to add the FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
 		break;
 	case EVENT_EXIT:
 		if (!exit_process(processes, p))
