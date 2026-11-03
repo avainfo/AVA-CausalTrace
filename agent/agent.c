@@ -19,6 +19,7 @@
 
 #include "agent.h"
 #include "events.h"
+#include "output.h"
 #include "signals.h"
 
 static const char* const program_names[PROGRAM_COUNT] = {
@@ -88,6 +89,7 @@ int callback(void* ctx, void* data, size_t size) {
 void agent_destroy(Agent* agent) {
 	printf("\n");
 	show_processes(agent->processes);
+	show_statistics(agent->obj);
 	for (size_t i = 0; i < PROGRAM_COUNT; i++)
 		bpf_link__destroy(agent->links[i]);
 

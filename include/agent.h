@@ -71,7 +71,6 @@ int agent_run(Agent* agent);
 int is_referenced(Process* processes, Process* p);
 int add_process(Process* processes, Process p);
 Process* search_process(Process* processes, Process p);
-void show_processes(Process* processes);
 int ensure_parent(Process* processes, struct event* e);
 int exit_process(Process* processes, Process p);
 int evict_process(Process* processes);

@@ -16,7 +16,6 @@
 
 #include "agent.h"
 #include "events.h"
-#include "formating.h"
 
 int is_referenced(Process* processes, Process* p) {
 	if (!processes || p->pid == 0 || p->tid == 0)
@@ -116,41 +115,6 @@ Process* search_process(Process* processes, Process p) {
 		}
 	}
 	return NULL;
-}
-
-void show_processes(Process* processes) {
-	if (!processes)
-		return;
-	for (int i = 0; i < HISTORIC_SIZE; i++) {
-		if (processes[i].pid != 0) {
-			printf("Process: %s [%d][%d]", processes[i].comm, processes[i].pid, processes[i].tid);
-			ExecRecord* eh = processes[i].exec_history;
-			while (eh) {
-				printf(" <- %s", eh->comm);
-				eh = eh->previous;
-			}
-			printf("\n");
-			printf("  status: %s\n", processes[i].status == 0   ? "UNKOWN"
-			                         : processes[i].status == 1 ? "RUNNING"
-			                                                    : "EXITED");
-			Process* parent = processes[i].parent;
-			int j = 2;
-			while (parent) {
-				for (int k = 0; k < j; k++) {
-					putchar(' ');
-				}
-				printf("%s%s [%d][%d]", CHILD_CHARS, parent->comm, parent->pid, parent->tid);
-				ExecRecord* eh = parent->exec_history;
-				while (eh) {
-					printf(" -> %s", eh->comm);
-					eh = eh->previous;
-				}
-				printf("\n");
-				parent = parent->parent;
-				j += 2;
-			}
-		}
-	}
 }
 
 int ensure_parent(Process* processes, struct event* e) {
