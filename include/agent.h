@@ -19,6 +19,7 @@
 #endif
 
 #define HISTORIC_SIZE 512
+#define EXEC_RECORD_SIZE 64
 
 enum status_type {
 	STATUS_RUNNING = 1,

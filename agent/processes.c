@@ -29,6 +29,29 @@ int is_referenced(Process* processes, Process* p) {
 	return 0;
 }
 
+int count_exec_record(Process* p) {
+	int i = 0;
+	ExecRecord* eh = p->exec_history;
+	while (eh != NULL) {
+		i++;
+		eh = eh->previous;
+	}
+	return i;
+}
+
+int pop_exec_record(Process* p) {
+	ExecRecord* eh = p->exec_history;
+	while (eh != NULL) {
+		if (!eh->previous->previous)
+			break;
+		eh = eh->previous;
+	}
+	fprintf(stderr, "Popping last exec record (%s)\n", eh->previous->comm);
+	free(eh->previous);
+	eh->previous = NULL;
+	return 1;
+}
+
 int add_process(Process* processes, Process p) {
 	if (!processes || p.pid == 0)
 		return 0;
@@ -36,6 +59,9 @@ int add_process(Process* processes, Process p) {
 	Process* free_slot = NULL;
 	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
 		if (processes[i].pid == p.pid && processes[i].tid == p.tid && processes[i].start_time_ns == p.start_time_ns) {
+			if (count_exec_record(&processes[i]) >= EXEC_RECORD_SIZE)
+				pop_exec_record(&processes[i]);
+
 			ExecRecord* eh = malloc(sizeof(*eh));
 			if (!eh)
 				return 0;
@@ -98,16 +124,16 @@ void show_processes(Process* processes) {
 		return;
 	for (int i = 0; i < HISTORIC_SIZE; i++) {
 		if (processes[i].pid != 0) {
-			printf("Process: %s [%d][%d]\n", processes[i].comm, processes[i].pid, processes[i].tid);
-			printf("  status: %s", processes[i].status == 0   ? "UNKOWN"
-			                       : processes[i].status == 1 ? "RUNNING"
-			                                                  : "EXITED");
+			printf("Process: %s [%d][%d]", processes[i].comm, processes[i].pid, processes[i].tid);
 			ExecRecord* eh = processes[i].exec_history;
 			while (eh) {
-				printf(" -> %s", eh->comm);
+				printf(" <- %s", eh->comm);
 				eh = eh->previous;
 			}
 			printf("\n");
+			printf("  status: %s\n", processes[i].status == 0   ? "UNKOWN"
+			                         : processes[i].status == 1 ? "RUNNING"
+			                                                    : "EXITED");
 			Process* parent = processes[i].parent;
 			int j = 2;
 			while (parent) {
