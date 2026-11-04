@@ -61,7 +61,7 @@ void show_processes(Process* processes) {
 			char* status_str = status == 0 ? "UNKOWN" : status == 1 ? "RUNNING" : "EXITED";
 			printf("  status: %s\n", status_str);
 
-			printf("  popped historic: %d\n", processes[i].popped_er);
+			printf("  popped historic: %u\n", processes[i].popped_er);
 
 			Process* parent = processes[i].parent;
 			int j = 2;
