@@ -9,7 +9,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <bpf/bpf_helpers.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
