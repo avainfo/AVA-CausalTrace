@@ -7,7 +7,7 @@ import sys
 import tempfile
 import time
 
-TOTAL_STEPS = 12
+TOTAL_STEPS = 124
 
 
 def main() -> None:
