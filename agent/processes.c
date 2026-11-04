@@ -46,7 +46,6 @@ int pop_exec_record(Process* p) {
 		eh = eh->previous;
 	}
 	p->popped_er += 1;
-	fprintf(stderr, "Popping last exec record (%s)\n", eh->previous->comm);
 	free(eh->previous);
 	eh->previous = NULL;
 	return 1;
