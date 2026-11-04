@@ -35,6 +35,8 @@ struct event {
 	__u64 start_time_ns;
 	__u64 p_start_time_ns;
 
+	__u64 timestamp_ns;
+
 	char comm[16];
 };
 

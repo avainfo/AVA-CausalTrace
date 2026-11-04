@@ -38,6 +38,43 @@ void print_title(char* title) {
 	printf("%s\n", BOX_BR);
 }
 
+void print_parent(Process* p) {
+	int j = 2;
+	while (p) {
+		spacer(j);
+		printf("%s%s [%d][%d] (%llu)", CHILD_CHARS, p->comm, p->pid, p->tid, p->timestamp_ns);
+
+		ExecRecord* eh = p->exec_history;
+		while (eh) {
+			printf(" -> %s", eh->comm);
+			eh = eh->previous;
+		}
+		printf("\n");
+
+		p = p->parent;
+		j += 2;
+	}
+}
+
+void print_process(Process* p) {
+	printf("Process: %s [%d][%d] (%llu)", p->comm, p->pid, p->tid, p->timestamp_ns);
+
+	ExecRecord* eh = p->exec_history;
+	while (eh) {
+		printf(" <- %s", eh->comm);
+		eh = eh->previous;
+	}
+	printf("\n");
+
+	int status = p->status;
+	char* status_str = status == 0 ? "UNKOWN" : status == 1 ? "RUNNING" : "EXITED";
+	printf("  status: %s\n", status_str);
+
+	printf("  popped historic: %u\n", p->popped_er);
+
+	print_parent(p->parent);
+}
+
 void show_processes(Process* processes) {
 	if (!processes)
 		return;
@@ -48,37 +85,7 @@ void show_processes(Process* processes) {
 		if (processes[i].pid != 0) {
 			if (empty)
 				empty = 0;
-			printf("Process: %s [%d][%d]", processes[i].comm, processes[i].pid, processes[i].tid);
-
-			ExecRecord* eh = processes[i].exec_history;
-			while (eh) {
-				printf(" <- %s", eh->comm);
-				eh = eh->previous;
-			}
-			printf("\n");
-
-			int status = processes[i].status;
-			char* status_str = status == 0 ? "UNKOWN" : status == 1 ? "RUNNING" : "EXITED";
-			printf("  status: %s\n", status_str);
-
-			printf("  popped historic: %u\n", processes[i].popped_er);
-
-			Process* parent = processes[i].parent;
-			int j = 2;
-			while (parent) {
-				spacer(j);
-				printf("%s%s [%d][%d]", CHILD_CHARS, parent->comm, parent->pid, parent->tid);
-
-				ExecRecord* eh = parent->exec_history;
-				while (eh) {
-					printf(" -> %s", eh->comm);
-					eh = eh->previous;
-				}
-				printf("\n");
-
-				parent = parent->parent;
-				j += 2;
-			}
+			print_process(&processes[i]);
 		}
 	}
 	if (empty)
