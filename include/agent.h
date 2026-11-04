@@ -29,6 +29,8 @@ enum status_type {
 typedef struct ExecRecord {
 	char comm[16];
 
+	__u64 timestamp_ns;
+
 	struct ExecRecord* previous;
 } ExecRecord;
 

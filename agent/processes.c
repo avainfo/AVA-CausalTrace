@@ -9,6 +9,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <bpf/bpf_helpers.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,6 +67,7 @@ int add_process(Process* processes, Process p) {
 				pop_exec_record(&processes[i]);
 
 			eh->previous = processes[i].exec_history;
+			eh->timestamp_ns = processes[i].timestamp_ns;
 
 			memcpy(eh->comm, processes[i].comm, sizeof(eh->comm));
 
