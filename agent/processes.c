@@ -38,8 +38,9 @@ int count_exec_record(Process* p) {
 	return i;
 }
 
-// TODO: Add to show processes and to the process the number of popped ER
 int pop_exec_record(Process* p) {
+	if (count_exec_record(p) <= 1)
+		return 0;
 	ExecRecord* eh = p->exec_history;
 	while (eh->previous->previous) {
 		eh = eh->previous;
