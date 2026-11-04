@@ -45,6 +45,7 @@ int callback(void* ctx, void* data, size_t size) {
 	    .exec_history = NULL,
 	    .status = 0,
 	    .parent = NULL,
+	    .popped_er = 0,
 	};
 
 	memcpy(p.comm, e->comm, sizeof(e->comm));

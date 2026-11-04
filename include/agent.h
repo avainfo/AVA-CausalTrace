@@ -47,6 +47,8 @@ typedef struct Process {
 
 	struct Process* parent;
 	struct ExecRecord* exec_history;
+
+	__u32 popped_er;
 } Process;
 
 enum {

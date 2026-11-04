@@ -44,6 +44,7 @@ int pop_exec_record(Process* p) {
 	while (eh->previous->previous) {
 		eh = eh->previous;
 	}
+	p->popped_er += 1;
 	fprintf(stderr, "Popping last exec record (%s)\n", eh->previous->comm);
 	free(eh->previous);
 	eh->previous = NULL;
@@ -70,6 +71,7 @@ int add_process(Process* processes, Process p) {
 
 			p.exec_history = eh;
 			p.parent = processes[i].parent;
+			p.popped_er = processes[i].popped_er;
 
 			processes[i] = p;
 			return 1;
