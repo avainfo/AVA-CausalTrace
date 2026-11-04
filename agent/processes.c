@@ -57,12 +57,12 @@ int add_process(Process* processes, Process p) {
 	Process* free_slot = NULL;
 	for (size_t i = 0; i < HISTORIC_SIZE; i++) {
 		if (processes[i].pid == p.pid && processes[i].tid == p.tid && processes[i].start_time_ns == p.start_time_ns) {
-			if (count_exec_record(&processes[i]) >= EXEC_RECORD_SIZE)
-				pop_exec_record(&processes[i]);
-
 			ExecRecord* eh = malloc(sizeof(*eh));
 			if (!eh)
 				return 0;
+
+			if (count_exec_record(&processes[i]) >= EXEC_RECORD_SIZE)
+				pop_exec_record(&processes[i]);
 
 			eh->previous = processes[i].exec_history;
 
