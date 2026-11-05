@@ -42,7 +42,8 @@ int callback(void* ctx, void* data, size_t size) {
 	    .ptid = e->ptid,
 	    .start_time_ns = e->start_time_ns,
 	    .parent_start_time_ns = e->p_start_time_ns,
-	    .timestamp_ns = e->timestamp_ns,
+	    .timestamp_ns = 0,
+	    .exit_time_ns = 0,
 	    .exec_history = NULL,
 	    .status = 0,
 	    .parent = NULL,
@@ -53,6 +54,7 @@ int callback(void* ctx, void* data, size_t size) {
 
 	switch (e->type) {
 	case EVENT_EXEC:
+		p.timestamp_ns = e->timestamp_ns;
 		p.status = STATUS_RUNNING;
 		if (add_process(processes, p))
 			printf("EXEC pid=%u comm=%s\n", e->pid, e->comm);
@@ -60,6 +62,7 @@ int callback(void* ctx, void* data, size_t size) {
 			fprintf(stderr, "Failed to add the EXEC pid=%u comm=%s\n", e->pid, e->comm);
 		break;
 	case EVENT_FORK:
+		p.timestamp_ns = e->timestamp_ns;
 		p.status = STATUS_RUNNING;
 		if (!ensure_parent(processes, e)) {
 			fprintf(stderr, "Failed to ensure parent ppid=%u ptid=%u for child pid=%u\n", e->ppid, e->ptid, e->pid);
@@ -76,6 +79,7 @@ int callback(void* ctx, void* data, size_t size) {
 		printf("EXIT pid=%u comm=%s\n", e->pid, e->comm);
 		break;
 	case EVENT_THREAD:
+		p.timestamp_ns = e->timestamp_ns;
 		p.status = STATUS_RUNNING;
 		if (add_process(processes, p))
 			printf("THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid, e->comm);

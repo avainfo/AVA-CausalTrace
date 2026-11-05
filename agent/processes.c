@@ -156,6 +156,7 @@ int exit_process(Process* processes, Process p) {
 		return 0;
 
 	target->status = STATUS_EXITED;
+	target->exit_time_ns = p.timestamp_ns;
 
 	return 1;
 }

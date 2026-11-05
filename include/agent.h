@@ -47,6 +47,8 @@ typedef struct Process {
 
 	__u64 timestamp_ns;
 
+	__u64 exit_time_ns;
+
 	__u32 status;
 
 	struct Process* parent;
