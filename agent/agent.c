@@ -48,6 +48,7 @@ int callback(void* ctx, void* data, size_t size) {
 	    .status = 0,
 	    .parent = NULL,
 	    .popped_er = 0,
+	    .failed_add = 0,
 	};
 
 	memcpy(p.comm, e->comm, sizeof(e->comm));
@@ -57,8 +58,9 @@ int callback(void* ctx, void* data, size_t size) {
 		p.status = STATUS_RUNNING;
 		if (add_process(processes, p))
 			printf("EXEC pid=%u comm=%s\n", e->pid, e->comm);
-		else
+		else {
 			fprintf(stderr, "Failed to add the EXEC pid=%u comm=%s\n", e->pid, e->comm);
+		}
 		break;
 	case EVENT_FORK:
 		p.status = STATUS_RUNNING;
@@ -68,8 +70,9 @@ int callback(void* ctx, void* data, size_t size) {
 		}
 		if (add_process(processes, p))
 			printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
-		else
+		else {
 			fprintf(stderr, "Failed to add the FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
+		}
 		break;
 	case EVENT_EXIT:
 		if (!exit_process(processes, p))
@@ -80,9 +83,10 @@ int callback(void* ctx, void* data, size_t size) {
 		p.status = STATUS_RUNNING;
 		if (add_process(processes, p))
 			printf("THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid, e->comm);
-		else
+		else {
 			fprintf(stderr, "Failed to add the THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid,
 			        e->comm);
+		}
 		break;
 	}
 
@@ -96,6 +100,13 @@ void agent_destroy(Agent* agent) {
 	for (size_t i = 0; i < PROGRAM_COUNT; i++)
 		bpf_link__destroy(agent->links[i]);
 
+	int n;
+	do {
+		n = ring_buffer__consume(agent->rb);
+	} while (n > 0);
+
+	if (n < 0)
+		fprintf(stderr, "Ring buffer drain failed: %d\n", n);
 	ring_buffer__free(agent->rb);
 	free_processes(agent->processes);
 	free(agent->processes);

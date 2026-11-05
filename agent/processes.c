@@ -188,6 +188,8 @@ int evict_process(Process* processes) {
 }
 
 void free_processes(Process* processes) {
+	if (!processes)
+		return;
 	for (int i = 0; i < HISTORIC_SIZE; i++) {
 		if (processes[i].pid == 0)
 			continue;

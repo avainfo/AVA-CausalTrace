@@ -55,6 +55,7 @@ typedef struct Process {
 	struct ExecRecord* exec_history;
 
 	__u32 popped_er;
+	__u32 failed_add;
 } Process;
 
 enum {
