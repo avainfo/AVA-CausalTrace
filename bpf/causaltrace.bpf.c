@@ -120,7 +120,7 @@ int BPF_PROG(obs_exits, struct task_struct* p) {
 }
 
 SEC("tracepoint/syscalls/sys_enter_openat")
-int handle_openat(struct trace_event_raw_sys_enter* ctx) {
+int handle_enter_openat(struct trace_event_raw_sys_enter* ctx) {
 	struct event* e;
 
 	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);

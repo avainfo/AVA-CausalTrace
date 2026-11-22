@@ -26,7 +26,7 @@ static const char* const program_names[PROGRAM_COUNT] = {
     [PROGRAM_EXEC] = "obs_execs",
     [PROGRAM_FORK] = "obs_forks",
     [PROGRAM_EXIT] = "obs_exits",
-    [PROGRAM_OPENAT] = "handle_openat",
+    [PROGRAM_OPENAT] = "handle_enter_openat",
 };
 
 int callback(void* ctx, void* data, size_t size) {
