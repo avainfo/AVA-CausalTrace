@@ -19,6 +19,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+char* event_type_title[PROGRAM_COUNT + 1] = {
+    "EVENT_EXEC_TITLE",   "EVENT_FORK_TITLE",   "EVENT_EXIT_TITLE",
+    "EVENT_THREAD_TITLE", "OPENAT_ENTER_TITLE", "OPENAT_EXIT_TITLE",
+};
+
 void spacer(const int j) {
 	for (int i = 0; i < j; i++)
 		putchar(' ');
@@ -120,10 +125,10 @@ void show_statistics(struct bpf_object* obj) {
 	printf("Ring buffer drops:\n");
 
 	__u64 total = 0;
-	for (__u32 i = 1; i <= 4; i++) {
+	for (__u32 i = 1; i <= PROGRAM_COUNT + 1; i++) {
 		spacer(2);
 
-		char* title = i == 1 ? "EXEC" : i == 2 ? "FORK" : i == 3 ? "EXIT" : "THREAD";
+		char* title = event_type_title[i - 1];
 
 		int err = bpf_map__lookup_elem(map, &i, sizeof(i), values, ncpus * sizeof(*values), 0);
 		if (err) {
@@ -139,6 +144,6 @@ void show_statistics(struct bpf_object* obj) {
 		printf("%s%s:\t%llu\n", CHILD_CHARS, title, count);
 	}
 	spacer(2);
-	printf("%sTotal:\t%llu\n", CHILD_CHARS, total);
+	printf("%sTotal:\t\t%llu\n", CHILD_CHARS, total);
 	free(values);
 }

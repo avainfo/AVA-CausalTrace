@@ -94,7 +94,7 @@ int callback(void* ctx, void* data, size_t size) {
 		printf("ENTER OPENAT pid=%i dfd=%d, file=%s, flags=0x%llx\n", e->pid, e->dfd, e->fname, e->flags);
 		break;
 	case OPENAT_EXIT:
-		printf("EXIT OPENAT pid=%i ret=%li\n", e->pid, e->open_return);
+		printf("EXIT OPENAT pid=%i ret=%lli\n", e->pid, e->open_return);
 		break;
 	}
 

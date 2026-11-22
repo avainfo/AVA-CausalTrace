@@ -25,7 +25,7 @@ struct {
 
 struct {
 	__uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
-	__uint(max_entries, EVENT_THREAD + 1);
+	__uint(max_entries, OPENAT_EXIT + 1);
 	__type(key, __u32);
 	__type(value, __u64);
 } ringbuf_drops SEC(".maps");
@@ -125,7 +125,7 @@ int handle_enter_openat(struct trace_event_raw_sys_enter* ctx) {
 
 	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
 	if (!e) {
-		count_drop(EVENT_EXIT);
+		count_drop(OPENAT_ENTER);
 		return 0;
 	}
 
@@ -154,7 +154,7 @@ int handle_exit_openat(struct trace_event_raw_sys_exit* ctx) {
 
 	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
 	if (!e) {
-		count_drop(EVENT_EXIT);
+		count_drop(OPENAT_EXIT);
 		return 0;
 	}
 

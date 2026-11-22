@@ -43,7 +43,7 @@ struct event {
 	__u64 flags;
 	char fname[256];
 
-	long open_return;
+	__s64 open_return;
 
 	char comm[16];
 };
