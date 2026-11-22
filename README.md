@@ -70,6 +70,52 @@ Other useful targets:
 
 `load` and `unload` are separate helpers for manual `bpftool` experiments. They are not needed for `make run`. Note that the current `unload` target does not remove a pin directory created by `loadall`.
 
+## Common commands
+
+### Daily workflow
+
+Rebuild changed targets and run:
+
+```sh
+clear && make run
+```
+
+Clean build and run:
+
+```sh
+clear && make clean && make run
+```
+
+### Memory & undefined behavior debugging (ASan + UBSan + LSan)
+
+Build with sanitizers and run the agent:
+
+```sh
+clear && make clean && make CFLAGS="-Wall -Wextra -Werror -Wshadow -Wformat=2 -Wundef -Wnull-dereference -Wimplicit-fallthrough -Wstrict-prototypes -g3 -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -Iinclude -MMD -MP" && sudo ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1 ./bin/causaltrace
+```
+
+Re-run an already built sanitizer binary:
+
+```sh
+sudo ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1 ./bin/causaltrace
+```
+
+### Manual BPF inspection (`bpftool`)
+
+Load or unload BPF programs manually:
+
+```sh
+make load
+make unload
+```
+
+Inspect loaded programs and maps in the kernel:
+
+```sh
+sudo bpftool prog show | grep -A 3 causaltrace
+sudo bpftool map show
+```
+
 ## Test it
 
 Start the agent in one terminal:
@@ -100,6 +146,12 @@ EXIT pid=3000 tid=3000 comm=python3
 
 The exact order of the worker thread events can vary. After the test finishes, stop the agent with Ctrl+C to inspect its in-memory task records and command-name history.
 
+To run the exec chain workload in another terminal while the agent is running:
+
+```sh
+python3 tests/test_causaltrace_execs.py
+```
+
 This is a manual workload, not an automated test suite. It doesn't start the agent or assert on the collected output.
 
 For a simpler fork/exec test:
@@ -128,10 +180,10 @@ The next step is to make process/thread state reliable, including exit handling,
 
 The code currently uses SPDX identifiers in individual source files:
 
-| Component | License |
-| --- | --- |
-| eBPF programs | GPL-2.0-only |
-| `include/events.h` | GPL-2.0-only |
-| C agent and its headers | Apache-2.0 |
+| Component               | License      |
+| ----------------------- | ------------ |
+| eBPF programs           | GPL-2.0-only |
+| `include/events.h`      | GPL-2.0-only |
+| C agent and its headers | Apache-2.0   |
 
 The planned CLI and SDK are intended to use Apache-2.0. Standalone license files have not been added yet. The separate causal engine is proprietary.
