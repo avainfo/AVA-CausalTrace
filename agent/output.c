@@ -11,6 +11,7 @@
 
 #include "output.h"
 #include "agent.h"
+#include "events.h"
 
 #include <asm-generic/errno-base.h>
 #include <bpf/libbpf.h>
@@ -19,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char* event_type_title[PROGRAM_COUNT + 1] = {
+static const char* const event_type_title[] = {
     "EVENT_EXEC_TITLE",   "EVENT_FORK_TITLE",   "EVENT_EXIT_TITLE",
     "EVENT_THREAD_TITLE", "OPENAT_ENTER_TITLE", "OPENAT_EXIT_TITLE",
 };
@@ -125,10 +126,10 @@ void show_statistics(struct bpf_object* obj) {
 	printf("Ring buffer drops:\n");
 
 	__u64 total = 0;
-	for (__u32 i = 1; i <= PROGRAM_COUNT + 1; i++) {
+	for (__u32 i = 1; i < EVENT_COUNT; i++) {
 		spacer(2);
 
-		char* title = event_type_title[i - 1];
+		const char* title = event_type_title[i - 1];
 
 		int err = bpf_map__lookup_elem(map, &i, sizeof(i), values, ncpus * sizeof(*values), 0);
 		if (err) {

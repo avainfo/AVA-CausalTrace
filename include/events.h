@@ -23,6 +23,7 @@ enum event_type {
 	EVENT_THREAD = 4,
 	OPENAT_ENTER = 5,
 	OPENAT_EXIT = 6,
+	EVENT_COUNT,
 };
 
 struct event {
