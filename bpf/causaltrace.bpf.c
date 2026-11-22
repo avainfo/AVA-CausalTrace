@@ -136,6 +136,8 @@ int handle_enter_openat(struct trace_event_raw_sys_enter* ctx) {
 	e->type = OPENAT_ENTER;
 	e->dfd = (__s32)ctx->args[0];
 	e->flags = (unsigned int)ctx->args[2];
+	e->mode = (unsigned int)ctx->args[3];
+	e->timestamp_ns = bpf_ktime_get_ns();
 
 	const char* filename = (const char*)ctx->args[1];
 

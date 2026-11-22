@@ -40,13 +40,14 @@ struct event {
 
 	__u64 timestamp_ns;
 
+	char comm[16];
+
 	__s32 dfd;
 	__u64 flags;
+	__u64 mode;
 	char fname[256];
 
 	__s64 open_return;
-
-	char comm[16];
 };
 
 #endif // EVENTS_H

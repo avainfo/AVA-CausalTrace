@@ -35,7 +35,10 @@ int callback(void* ctx, void* data, size_t size) {
 		return 0;
 
 	struct event* e = data;
-	Process* processes = ctx;
+	Agent* agent = (Agent*)ctx;
+
+	Process* processes = agent->processes;
+	OpenAT* open_files = agent->open_files;
 
 	Process p = {
 	    .pid = e->pid,
@@ -91,7 +94,18 @@ int callback(void* ctx, void* data, size_t size) {
 		}
 		break;
 	case OPENAT_ENTER:
-		printf("ENTER OPENAT pid=%i dfd=%d, file=%s, flags=0x%llx\n", e->pid, e->dfd, e->fname, e->flags);
+		printf("ENTER OPENAT pid=%i file=%s flags=0x%llx\n", e->pid, e->fname, e->flags);
+		OpenAT file = {
+		    .pid = e->pid,
+		    .tid = e->tid,
+		    .dfd = e->dfd,
+		    .timestamp_ns = e->timestamp_ns,
+		    .flags = e->flags,
+		    .filename = e->fname,
+		    .mode = e->mode,
+		    .ret = 0,
+		};
+		add_open_file(open_files, file);
 		break;
 	case OPENAT_EXIT:
 		printf("EXIT OPENAT pid=%i ret=%lli\n", e->pid, e->open_return);
@@ -132,6 +146,7 @@ void agent_destroy(Agent* agent) {
 	ring_buffer__free(agent->rb);
 	free_processes(agent->processes);
 	free(agent->processes);
+	free(agent->open_files);
 	bpf_object__close(agent->obj);
 }
 
@@ -183,11 +198,17 @@ int agent_init(Agent* agent) {
 
 	agent->processes = calloc(HISTORIC_SIZE, sizeof(*agent->processes));
 	if (!agent->processes) {
-		perror("calloc");
+		perror("calloc processes");
 		return -ENOMEM;
 	}
 
-	agent->rb = ring_buffer__new(map_fd, callback, agent->processes, NULL);
+	agent->open_files = calloc(OPEN_FILES_SIZE, sizeof(*agent->open_files));
+	if (!agent->open_files) {
+		perror("calloc open_files");
+		return -ENOMEM;
+	}
+
+	agent->rb = ring_buffer__new(map_fd, callback, agent, NULL);
 	if (!agent->rb) {
 		perror("ring_buffer__new");
 		return -1;

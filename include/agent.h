@@ -19,6 +19,7 @@
 #endif
 
 #define HISTORIC_SIZE 512
+#define OPEN_FILES_SIZE 512
 #define EXEC_RECORD_SIZE 64
 
 enum status_type {
@@ -58,6 +59,20 @@ typedef struct Process {
 	__u32 failed_add;
 } Process;
 
+typedef struct {
+	__u32 pid;
+	__u32 tid;
+
+	__u64 timestamp_ns;
+
+	__s64 dfd;
+	const char* filename;
+	__u64 flags;
+	__u64 mode;
+
+	__s64 ret;
+} OpenAT;
+
 enum {
 	PROGRAM_EXEC,
 	PROGRAM_FORK,
@@ -71,7 +86,9 @@ typedef struct {
 	struct bpf_object* obj;
 	struct bpf_link* links[PROGRAM_COUNT];
 	struct ring_buffer* rb;
+
 	Process* processes;
+	OpenAT* open_files;
 } Agent;
 
 typedef struct {
@@ -99,5 +116,8 @@ int ensure_parent(Process* processes, struct event* e);
 int exit_process(Process* processes, Process p);
 int evict_process(Process* processes);
 void free_processes(Process* processes);
+
+int add_open_file(OpenAT* open_files, OpenAT file);
+int evict_open_file(OpenAT* open_files);
 
 #endif // AGENT_H
