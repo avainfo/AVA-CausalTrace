@@ -133,7 +133,7 @@ int handle_enter_openat(struct trace_event_raw_sys_enter* ctx) {
 
 	e->pid = pid_tgid >> 32;
 	e->tid = (__u32)pid_tgid;
-	e->type = EVENT_OPENAT;
+	e->type = OPENAT_ENTER;
 	e->dfd = (__s32)ctx->args[0];
 	e->flags = (unsigned int)ctx->args[2];
 
@@ -143,6 +143,27 @@ int handle_enter_openat(struct trace_event_raw_sys_enter* ctx) {
 		bpf_ringbuf_discard(e, 0);
 		return 0;
 	}
+
+	bpf_ringbuf_submit(e, 0);
+	return 0;
+}
+
+SEC("tracepoint/syscalls/sys_exit_openat")
+int handle_exit_openat(struct trace_event_raw_sys_exit* ctx) {
+	struct event* e;
+
+	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
+	if (!e) {
+		count_drop(EVENT_EXIT);
+		return 0;
+	}
+
+	__u64 pid_tgid = bpf_get_current_pid_tgid();
+
+	e->pid = pid_tgid >> 32;
+	e->tid = (__u32)pid_tgid;
+	e->type = OPENAT_EXIT;
+	e->open_return = ctx->ret;
 
 	bpf_ringbuf_submit(e, 0);
 	return 0;

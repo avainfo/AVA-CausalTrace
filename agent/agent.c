@@ -26,7 +26,8 @@ static const char* const program_names[PROGRAM_COUNT] = {
     [PROGRAM_EXEC] = "obs_execs",
     [PROGRAM_FORK] = "obs_forks",
     [PROGRAM_EXIT] = "obs_exits",
-    [PROGRAM_OPENAT] = "handle_enter_openat",
+    [PROGRAM_ENTER_OPENAT] = "handle_enter_openat",
+    [PROGRAM_EXIT_OPENAT] = "handle_exit_openat",
 };
 
 int callback(void* ctx, void* data, size_t size) {
@@ -89,8 +90,11 @@ int callback(void* ctx, void* data, size_t size) {
 			        e->comm);
 		}
 		break;
-	case EVENT_OPENAT:
-		printf("OPENAT pid=%i dfd=%d, file=%s, flags=0x%llx\n", e->pid, e->dfd, e->fname, e->flags);
+	case OPENAT_ENTER:
+		printf("ENTER OPENAT pid=%i dfd=%d, file=%s, flags=0x%llx\n", e->pid, e->dfd, e->fname, e->flags);
+		break;
+	case OPENAT_EXIT:
+		printf("EXIT OPENAT pid=%i ret=%li\n", e->pid, e->open_return);
 		break;
 	}
 
