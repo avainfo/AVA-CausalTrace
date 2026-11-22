@@ -8,14 +8,33 @@ PROG_BIN = bin/$(BPF_NAME)
 BPF_SRC = bpf/$(BPF_NAME).bpf.c
 BPF_OBJ = bin/$(BPF_NAME).bpf.o
 
-CFLAGS = -Wall -Wextra -Werror -Iinclude -MMD -MP
+WARN_FLAGS = \
+	-Wall \
+	-Wextra \
+	-Werror \
+	-Wshadow \
+	-Wformat=2 \
+	-Wundef \
+	-Wnull-dereference \
+	-Wimplicit-fallthrough \
+	-Wstrict-prototypes
+
+LDFLAGS ?=
+CFLAGS = $(WARN_FLAGS) -g -O2 -Iinclude -MMD -MP
 LIBBPF_CFLAGS = $(shell pkg-config --cflags libbpf)
 LIBBPF_LIBS = $(shell pkg-config --libs libbpf)
+
+BPF_WARN_FLAGS = \
+	-Wall \
+	-Wextra \
+	-Werror \
+	-Wno-unused-parameter \
+	-Wno-missing-declarations
 
 all: $(PROG_BIN) $(BPF_OBJ)
 
 $(PROG_BIN): $(PROG_OBJ)
-	$(CC) $(PROG_OBJ) -o $@ $(LIBBPF_LIBS)
+	$(CC) $(CFLAGS) $(PROG_OBJ) -o $@ $(LIBBPF_LIBS) $(LDFLAGS)
 
 bin/agent/%.o: agent/%.c
 	mkdir -p $(dir $@)
@@ -24,6 +43,7 @@ bin/agent/%.o: agent/%.c
 $(BPF_OBJ): $(BPF_SRC) include/vmlinux.h include/events.h
 	mkdir -p $(dir $@)
 	clang -g -O2 \
+		$(BPF_WARN_FLAGS) \
 		-target bpf \
 		-D__TARGET_ARCH_x86 \
 		-Iinclude \
