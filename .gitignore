@@ -3,3 +3,4 @@ vmlinux.h
 causaltrace
 *.txt
 compile_commands.json
+.clangd
