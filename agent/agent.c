@@ -26,6 +26,7 @@ static const char* const program_names[PROGRAM_COUNT] = {
     [PROGRAM_EXEC] = "obs_execs",
     [PROGRAM_FORK] = "obs_forks",
     [PROGRAM_EXIT] = "obs_exits",
+    [PROGRAM_OPENAT] = "handle_openat",
 };
 
 int callback(void* ctx, void* data, size_t size) {
@@ -88,25 +89,42 @@ int callback(void* ctx, void* data, size_t size) {
 			        e->comm);
 		}
 		break;
+	case EVENT_OPENAT:
+		printf("OPENAT pid=%i dfd=%d, file=%s, flags=0x%llx\n", e->pid, e->dfd, e->fname, e->flags);
+		break;
 	}
 
 	return 0;
 }
 
 void agent_destroy(Agent* agent) {
-	printf("\n");
-	show_processes(agent->processes);
-	show_statistics(agent->obj);
-	for (size_t i = 0; i < PROGRAM_COUNT; i++)
-		bpf_link__destroy(agent->links[i]);
+	if (!agent)
+		return;
 
-	int n;
-	do {
-		n = ring_buffer__consume(agent->rb);
-	} while (n > 0);
+	for (size_t i = 0; i < PROGRAM_COUNT; i++) {
+		if (agent->links[i]) {
+			bpf_link__destroy(agent->links[i]);
+			agent->links[i] = NULL;
+		}
+	}
 
-	if (n < 0)
-		fprintf(stderr, "Ring buffer drain failed: %d\n", n);
+	if (agent->rb) {
+		int n;
+
+		do {
+			n = ring_buffer__consume(agent->rb);
+		} while (n > 0);
+
+		if (n < 0)
+			fprintf(stderr, "Ring buffer drain failed: %d\n", n);
+
+		printf("\n");
+		show_processes(agent->processes);
+
+		if (agent->obj)
+			show_statistics(agent->obj);
+	}
+
 	ring_buffer__free(agent->rb);
 	free_processes(agent->processes);
 	free(agent->processes);

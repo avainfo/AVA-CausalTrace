@@ -11,6 +11,7 @@
 
 #include "vmlinux.h"
 
+#include "events.h"
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
@@ -113,6 +114,35 @@ int BPF_PROG(obs_exits, struct task_struct* p) {
 	e->type = EVENT_EXIT;
 
 	bpf_core_read_str(e->comm, sizeof(e->comm), &p->comm);
+
+	bpf_ringbuf_submit(e, 0);
+	return 0;
+}
+
+SEC("tracepoint/syscalls/sys_enter_openat")
+int handle_openat(struct trace_event_raw_sys_enter* ctx) {
+	struct event* e;
+
+	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
+	if (!e) {
+		count_drop(EVENT_EXIT);
+		return 0;
+	}
+
+	__u64 pid_tgid = bpf_get_current_pid_tgid();
+
+	e->pid = pid_tgid >> 32;
+	e->tid = (__u32)pid_tgid;
+	e->type = EVENT_OPENAT;
+	e->dfd = (__s32)ctx->args[0];
+	e->flags = (unsigned int)ctx->args[2];
+
+	const char* filename = (const char*)ctx->args[1];
+
+	if (bpf_probe_read_user_str(e->fname, sizeof(e->fname), filename) < 0) {
+		bpf_ringbuf_discard(e, 0);
+		return 0;
+	}
 
 	bpf_ringbuf_submit(e, 0);
 	return 0;

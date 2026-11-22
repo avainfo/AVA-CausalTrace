@@ -21,6 +21,7 @@ enum event_type {
 	EVENT_FORK = 2,
 	EVENT_EXIT = 3,
 	EVENT_THREAD = 4,
+	EVENT_OPENAT = 5,
 };
 
 struct event {
@@ -36,6 +37,10 @@ struct event {
 	__u64 p_start_time_ns;
 
 	__u64 timestamp_ns;
+
+	__s32 dfd;
+	__u64 flags;
+	char fname[256];
 
 	char comm[16];
 };

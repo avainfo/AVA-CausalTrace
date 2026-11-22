@@ -71,6 +71,11 @@ void print_process(Process* p) {
 	printf("  status: %s\n", status_str);
 
 	printf("  popped historic: %u\n", p->popped_er);
+	printf("  start: %llu\n", (unsigned long long)p->start_time_ns);
+
+	printf("  current: %llu\n", (unsigned long long)p->timestamp_ns);
+
+	printf("  exit: %llu\n", (unsigned long long)p->exit_time_ns);
 
 	print_parent(p->parent);
 }

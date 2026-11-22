@@ -62,6 +62,7 @@ enum {
 	PROGRAM_EXEC,
 	PROGRAM_FORK,
 	PROGRAM_EXIT,
+	PROGRAM_OPENAT,
 	PROGRAM_COUNT,
 };
 
@@ -71,6 +72,19 @@ typedef struct {
 	struct ring_buffer* rb;
 	Process* processes;
 } Agent;
+
+typedef struct {
+	unsigned short common_type;
+	unsigned char common_flags;
+	unsigned char common_preempt_count;
+	int common_pid;
+
+	int __syscall_nr;
+	long dfd;
+	const char* filename;
+	unsigned long flags;
+	unsigned long mode;
+} sys_enter_openat_ctx;
 
 void agent_destroy(Agent* agent);
 int agent_attach(Agent* agent);
