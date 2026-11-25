@@ -118,6 +118,7 @@ int evict_process(Process* processes);
 void free_processes(Process* processes);
 
 int add_open_file(OpenAT* open_files, OpenAT file);
+void exit_open_file(OpenAT* open_files, OpenAT f, __s64 ret);
 int evict_open_file(OpenAT* open_files);
 
 #endif // AGENT_H

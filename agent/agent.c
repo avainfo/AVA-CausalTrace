@@ -56,6 +56,17 @@ int callback(void* ctx, void* data, size_t size) {
 	    .failed_add = 0,
 	};
 
+	OpenAT file = {
+	    .pid = e->pid,
+	    .tid = e->tid,
+	    .dfd = e->dfd,
+	    .timestamp_ns = e->timestamp_ns,
+	    .flags = e->flags,
+	    .filename = e->fname,
+	    .mode = e->mode,
+	    .ret = e->open_return,
+	};
+
 	memcpy(p.comm, e->comm, sizeof(e->comm));
 
 	switch (e->type) {
@@ -94,21 +105,12 @@ int callback(void* ctx, void* data, size_t size) {
 		}
 		break;
 	case OPENAT_ENTER:
-		printf("ENTER OPENAT pid=%i file=%s flags=0x%llx\n", e->pid, e->fname, e->flags);
-		OpenAT file = {
-		    .pid = e->pid,
-		    .tid = e->tid,
-		    .dfd = e->dfd,
-		    .timestamp_ns = e->timestamp_ns,
-		    .flags = e->flags,
-		    .filename = e->fname,
-		    .mode = e->mode,
-		    .ret = 0,
-		};
+		// printf("EXIT OPENAT pid=%i ret=%lli\n", e->pid, e->open_return);
+		// TODO : check for ENTER OPENAT
 		add_open_file(open_files, file);
 		break;
 	case OPENAT_EXIT:
-		printf("EXIT OPENAT pid=%i ret=%lli\n", e->pid, e->open_return);
+		exit_open_file(open_files, file, e->open_return);
 		break;
 	}
 
