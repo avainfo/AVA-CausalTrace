@@ -30,12 +30,11 @@ int add_open_file(OpenAT* open_files, OpenAT f) {
 			free_slot = &open_files[i];
 	}
 
-	if (!free_slot) {
-		if (evict_open_file(open_files)) {
-			return add_open_file(open_files, f);
-		}
+	if (!free_slot)
+		free_slot = evict_open_file(open_files);
+
+	if (!free_slot)
 		return 0;
-	}
 
 	*free_slot = f;
 	return 1;
@@ -74,7 +73,7 @@ void exit_open_file(OpenAT* open_files, OpenAT f, __s64 ret) {
 	memset(open_file, 0, sizeof(*open_file));
 }
 
-int evict_open_file(OpenAT* open_files) {
+OpenAT* evict_open_file(OpenAT* open_files) {
 	if (!open_files)
 		return 0;
 
@@ -85,6 +84,5 @@ int evict_open_file(OpenAT* open_files) {
 			last_file = &open_files[i];
 	}
 
-	memset(last_file, 0, sizeof(*last_file));
-	return 1;
+	return last_file;
 }
