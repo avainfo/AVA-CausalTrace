@@ -71,6 +71,7 @@ typedef struct {
 	__u64 mode;
 
 	__s64 ret;
+	__s32 fname_read_ret;
 } OpenAT;
 
 enum {

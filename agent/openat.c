@@ -10,6 +10,8 @@
  */
 
 #include "agent.h"
+
+#include <bpf/bpf_helpers.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,13 +63,14 @@ void exit_open_file(OpenAT* open_files, OpenAT f, __s64 ret) {
 	}
 
 	open_file->ret = ret;
+	const char* filename = open_file->fname_read_ret < 0 ? "<unavailable>" : open_file->filename;
 
 	if (ret >= 0)
-		printf("FILE_OPEN pid=%i tid=%i file=%s flags=0x%llx ret=%lli\n", open_file->pid, open_file->tid,
-		       open_file->filename, open_file->flags, open_file->ret);
+		printf("FILE_OPEN pid=%i tid=%i file=%s flags=0x%llx ret=%lli\n", open_file->pid, open_file->tid, filename,
+		       open_file->flags, open_file->ret);
 	else
 		fprintf(stderr, "FILE_OPEN_ERROR pid=%i tid=%i file=%s flags=0x%llx ret=%lli\n", open_file->pid, open_file->tid,
-		        open_file->filename, open_file->flags, open_file->ret);
+		        filename, open_file->flags, open_file->ret);
 
 	memset(open_file, 0, sizeof(*open_file));
 }

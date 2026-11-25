@@ -48,6 +48,7 @@ struct event {
 	char fname[256];
 
 	__s64 open_return;
+	__s32 fname_read_ret;
 };
 
 #endif // EVENTS_H

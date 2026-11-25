@@ -64,6 +64,7 @@ int callback(void* ctx, void* data, size_t size) {
 	    .flags = e->flags,
 	    .mode = e->mode,
 	    .ret = e->open_return,
+	    .fname_read_ret = e->fname_read_ret,
 	};
 
 	memcpy(p.comm, e->comm, sizeof(e->comm));

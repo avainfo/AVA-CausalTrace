@@ -141,10 +141,10 @@ int handle_enter_openat(struct trace_event_raw_sys_enter* ctx) {
 
 	const char* filename = (const char*)ctx->args[1];
 
-	if (bpf_probe_read_user_str(e->fname, sizeof(e->fname), filename) < 0) {
-		bpf_ringbuf_discard(e, 0);
-		return 0;
-	}
+	e->fname_read_ret = bpf_probe_read_user_str(e->fname, sizeof(e->fname), filename);
+
+	if (e->fname_read_ret < 0)
+		e->fname[0] = '\0';
 
 	bpf_ringbuf_submit(e, 0);
 	return 0;
