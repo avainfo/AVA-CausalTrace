@@ -75,7 +75,7 @@ void exit_open_file(OpenAT* open_files, OpenAT f, __s64 ret) {
 
 OpenAT* evict_open_file(OpenAT* open_files) {
 	if (!open_files)
-		return 0;
+		return NULL;
 
 	OpenAT* last_file = &open_files[0];
 
