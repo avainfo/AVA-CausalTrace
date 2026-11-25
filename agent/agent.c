@@ -68,6 +68,7 @@ int callback(void* ctx, void* data, size_t size) {
 
 	memcpy(p.comm, e->comm, sizeof(e->comm));
 	memcpy(file.filename, e->fname, sizeof(file.filename));
+	file.filename[sizeof(file.filename) - 1] = '\0';
 
 	switch (e->type) {
 	case EVENT_EXEC:
