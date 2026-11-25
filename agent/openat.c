@@ -20,8 +20,7 @@ int add_open_file(OpenAT* open_files, OpenAT f) {
 
 	OpenAT* free_slot = NULL;
 	for (size_t i = 0; i < OPEN_FILES_SIZE; i++) {
-		if (open_files[i].pid == f.pid && open_files[i].tid == f.tid && open_files[i].dfd == f.dfd &&
-		    strcmp(open_files[i].filename, f.filename) == 0) {
+		if (open_files[i].pid == f.pid && open_files[i].tid == f.tid) {
 			open_files[i] = f;
 			return 1;
 		}

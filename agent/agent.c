@@ -62,12 +62,12 @@ int callback(void* ctx, void* data, size_t size) {
 	    .dfd = e->dfd,
 	    .timestamp_ns = e->timestamp_ns,
 	    .flags = e->flags,
-	    .filename = e->fname,
 	    .mode = e->mode,
 	    .ret = e->open_return,
 	};
 
 	memcpy(p.comm, e->comm, sizeof(e->comm));
+	memcpy(file.filename, e->fname, sizeof(file.filename));
 
 	switch (e->type) {
 	case EVENT_EXEC:

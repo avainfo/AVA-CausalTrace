@@ -66,7 +66,7 @@ typedef struct {
 	__u64 timestamp_ns;
 
 	__s64 dfd;
-	const char* filename;
+	char filename[256];
 	__u64 flags;
 	__u64 mode;
 
