@@ -76,9 +76,8 @@ int callback(void* ctx, void* data, size_t size) {
 		p.status = STATUS_RUNNING;
 		if (add_process(processes, p))
 			printf("EXEC pid=%u comm=%s\n", e->pid, e->comm);
-		else {
+		else
 			fprintf(stderr, "Failed to add the EXEC pid=%u comm=%s\n", e->pid, e->comm);
-		}
 		break;
 	case EVENT_FORK:
 		p.status = STATUS_RUNNING;
@@ -88,9 +87,8 @@ int callback(void* ctx, void* data, size_t size) {
 		}
 		if (add_process(processes, p))
 			printf("FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
-		else {
+		else
 			fprintf(stderr, "Failed to add the FORK parent=%u child=%u comm=%s\n", e->ppid, e->pid, e->comm);
-		}
 		break;
 	case EVENT_EXIT:
 		if (!exit_process(processes, p))
@@ -101,10 +99,9 @@ int callback(void* ctx, void* data, size_t size) {
 		p.status = STATUS_RUNNING;
 		if (add_process(processes, p))
 			printf("THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid, e->comm);
-		else {
+		else
 			fprintf(stderr, "Failed to add the THREAD tgid=%u tid=%u creator_tid=%u comm=%s\n", e->pid, e->tid, e->ptid,
 			        e->comm);
-		}
 		break;
 	case OPENAT_ENTER:
 		// printf("EXIT OPENAT pid=%i ret=%lli\n", e->pid, e->open_return);
@@ -112,6 +109,7 @@ int callback(void* ctx, void* data, size_t size) {
 		add_open_file(open_files, file);
 		break;
 	case OPENAT_EXIT:
+		file.exit_timestamp_ns = e->timestamp_ns;
 		exit_open_file(open_files, file, e->open_return);
 		break;
 	}

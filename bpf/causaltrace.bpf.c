@@ -166,6 +166,7 @@ int handle_exit_openat(struct trace_event_raw_sys_exit* ctx) {
 	e->tid = (__u32)pid_tgid;
 	e->type = OPENAT_EXIT;
 	e->open_return = ctx->ret;
+	e->timestamp_ns = bpf_ktime_get_ns();
 
 	bpf_ringbuf_submit(e, 0);
 	return 0;
