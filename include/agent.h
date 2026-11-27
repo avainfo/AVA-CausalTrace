@@ -63,7 +63,8 @@ typedef struct {
 	__u32 pid;
 	__u32 tid;
 
-	__u64 timestamp_ns;
+	__u64 start_timestamp_ns;
+	__u64 exit_timestamp_ns;
 
 	__s64 dfd;
 	char filename[256];

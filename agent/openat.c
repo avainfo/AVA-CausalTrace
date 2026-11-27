@@ -67,10 +67,10 @@ void exit_open_file(OpenAT* open_files, OpenAT f, __s64 ret) {
 
 	if (ret >= 0)
 		printf("FILE_OPEN pid=%i tid=%i file=%s flags=0x%llx ret=%lli (%llu)\n", open_file->pid, open_file->tid,
-		       filename, open_file->flags, open_file->ret, open_file->timestamp_ns);
+		       filename, open_file->flags, open_file->ret, open_file->start_timestamp_ns);
 	else
 		fprintf(stderr, "FILE_OPEN_ERROR pid=%i tid=%i file=%s flags=0x%llx ret=%lli (%llu)\n", open_file->pid,
-		        open_file->tid, filename, open_file->flags, open_file->ret, open_file->timestamp_ns);
+		        open_file->tid, filename, open_file->flags, open_file->ret, open_file->start_timestamp_ns);
 
 	memset(open_file, 0, sizeof(*open_file));
 }
@@ -82,7 +82,7 @@ OpenAT* evict_open_file(OpenAT* open_files) {
 	OpenAT* last_file = &open_files[0];
 
 	for (size_t i = 1; i < OPEN_FILES_SIZE; i++) {
-		if (open_files[i].timestamp_ns < last_file->timestamp_ns)
+		if (open_files[i].start_timestamp_ns < last_file->start_timestamp_ns)
 			last_file = &open_files[i];
 	}
 
