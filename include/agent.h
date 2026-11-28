@@ -63,6 +63,8 @@ typedef struct {
 	__u32 pid;
 	__u32 tid;
 
+	__u64 start_time_ns;
+
 	__u64 start_timestamp_ns;
 	__u64 exit_timestamp_ns;
 

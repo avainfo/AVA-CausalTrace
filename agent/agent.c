@@ -60,7 +60,10 @@ int callback(void* ctx, void* data, size_t size) {
 	    .pid = e->pid,
 	    .tid = e->tid,
 	    .dfd = e->dfd,
+
+	    .start_time_ns = e->start_time_ns,
 	    .start_timestamp_ns = e->timestamp_ns,
+
 	    .flags = e->flags,
 	    .mode = e->mode,
 	    .ret = e->open_return,

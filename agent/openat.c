@@ -22,7 +22,8 @@ int add_open_file(OpenAT* open_files, OpenAT f) {
 
 	OpenAT* free_slot = NULL;
 	for (size_t i = 0; i < OPEN_FILES_SIZE; i++) {
-		if (open_files[i].pid == f.pid && open_files[i].tid == f.tid) {
+		if (open_files[i].pid == f.pid && open_files[i].tid == f.tid &&
+		    open_files[i].start_time_ns == f.start_time_ns) {
 			open_files[i] = f;
 			return 1;
 		}
@@ -48,7 +49,8 @@ void exit_open_file(OpenAT* open_files, OpenAT f, __s64 ret) {
 	OpenAT* open_file = NULL;
 
 	for (size_t i = 0; i < OPEN_FILES_SIZE; i++) {
-		if (open_files[i].pid == f.pid && open_files[i].tid == f.tid) {
+		if (open_files[i].pid == f.pid && open_files[i].tid == f.tid &&
+		    open_files[i].start_time_ns == f.start_time_ns) {
 			open_file = &open_files[i];
 			break;
 		}
